@@ -376,3 +376,46 @@ button, input, textarea { font: inherit; }
   .panel { border-radius: 15px; }
   .room-banner { align-items: flex-start; flex-direction: column; }
 }
+/* Focused classroom layout: caption above, full-width presentation, controls below */
+.classroom-focus-page { gap: 8px; }
+.focus-topline { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff; box-shadow: 0 8px 24px rgba(16, 42, 67, 0.07); }
+.focus-kicker { display: block; color: var(--primary); font-size: 10px; font-weight: 900; letter-spacing: 0.16em; }
+.focus-title-row { display: flex; align-items: center; gap: 16px; margin-top: 2px; }
+.focus-title-row h1 { margin: 0; font-size: clamp(19px, 1.8vw, 26px); letter-spacing: -0.04em; }
+.focus-room-code { color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
+.focus-room-code strong { margin-left: 5px; color: var(--primary-strong); font-size: 19px; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
+.focus-top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.caption-focus { flex-shrink: 0; padding: 10px 14px; border: 1px solid #28536e; border-radius: 16px; color: #ffffff; background: linear-gradient(145deg, #0b1f33, #102a43); box-shadow: 0 14px 32px rgba(7, 30, 48, 0.2); }
+.caption-toolbar { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; flex-wrap: wrap; }
+.caption-label { font-size: 17px; font-weight: 900; letter-spacing: 0.02em; }
+.caption-toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.caption-toolbar-actions .el-button + .el-button { margin-left: 0; }
+.caption-focus .caption-big { min-height: 74px; padding: 10px 18px; font-size: clamp(27px, 2.7vw, 42px); line-height: 1.3; border-radius: 12px; }
+.caption-focus .interim-caption { margin-top: 4px; font-size: 16px; color: #fde68a; }
+.caption-focus .warning-text { margin: 4px 0 0; font-size: 13px; color: #fecaca !important; }
+.ppt-focus { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.ppt-stage-focus { flex: 1; min-height: 0; aspect-ratio: auto; }
+.ppt-controlbar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding-top: 8px; flex-wrap: wrap; }
+.page-nav { display: flex; align-items: center; gap: 8px; }
+.page-indicator { min-width: 100px; text-align: center; color: var(--ink); font-size: 13px; font-weight: 800; }
+.record-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 5px; padding: 0 6px; border-radius: 99px; background: #e7f4fa; color: var(--primary-strong); font-size: 11px; font-weight: 900; }
+.records-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; height: 100%; min-height: 0; }
+.record-panel { display: flex; flex-direction: column; min-height: 0; }
+.record-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.record-heading h3 { margin: 0; font-size: 18px; }
+.record-heading span { color: var(--ink-soft); font-size: 12px; }
+.record-panel .caption-history, .record-panel .danmaku-list { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+@media (max-width: 1120px) {
+  .classroom-focus-page { height: auto; overflow: visible; }
+  .ppt-stage-focus { flex: none; min-height: 360px; aspect-ratio: 16 / 9; }
+  .records-grid { grid-template-columns: 1fr; height: auto; }
+  .record-panel .caption-history, .record-panel .danmaku-list { max-height: 260px; }
+}
+@media (max-width: 700px) {
+  .focus-topline { align-items: flex-start; flex-direction: column; }
+  .focus-title-row { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .focus-top-actions { justify-content: flex-start; }
+  .caption-toolbar-actions { margin-left: 0; }
+  .ppt-controlbar { align-items: stretch; }
+  .page-nav { width: 100%; justify-content: space-between; }
+}

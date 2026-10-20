@@ -65,6 +65,22 @@ public class RoomService {
         return toDto(room, lesson);
     }
 
+    public List<RoomDto> listForTeacher(AuthUser teacher) {
+        List<Lesson> lessons = lessonMapper.selectList(new LambdaQueryWrapper<Lesson>()
+                .eq(Lesson::getTeacherId, teacher.id()));
+        if (lessons.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<Long, Lesson> lessonMap = lessons.stream()
+                .collect(Collectors.toMap(Lesson::getId, Function.identity()));
+        return roomMapper.selectList(new LambdaQueryWrapper<Room>()
+                        .in(Room::getLessonId, lessonMap.keySet())
+                        .orderByDesc(Room::getCreatedAt))
+                .stream()
+                .map(room -> toDto(room, lessonMap.get(room.getLessonId())))
+                .toList();
+    }
+
     public RoomDto getForUser(Long roomId, AuthUser user) {
         Room room = requireRoom(roomId);
         Lesson lesson = lessonMapper.selectById(room.getLessonId());

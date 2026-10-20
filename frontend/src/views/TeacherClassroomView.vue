@@ -4,45 +4,37 @@
       <el-button @click="router.push('/teacher/lessons')">返回课程</el-button>
     </AppHeader>
 
-    <main class="page-shell classroom-page" v-loading="loading">
-      <div class="page-title-row">
-        <div>
-          <h1 class="page-title">{{ lessonTitle || '教师课堂' }}</h1>
-          <p class="page-subtitle">同步幻灯片、广播字幕并查看学生弹幕。</p>
-        </div>
-
-      </div>
-
-      <div class="room-banner" v-if="room">
-        <div>
-          <div class="muted room-code-label">房间码</div>
-          <div class="room-code" aria-live="polite">{{ roomCode }}</div>
-        </div>
-        <el-button @click="copyCode">复制房间码</el-button>
-        <div class="spacer"></div>
-        <span class="connection-pill" :class="connectionState">
-          <span class="connection-dot"></span>{{ connectionText }}
-        </span>
-        <el-tag :type="status === 'LIVE' ? 'success' : 'info'" size="large">
-          {{ status === 'LIVE' ? '课堂进行中' : '课堂已结束' }}
-        </el-tag>
-      </div>
-
-      <section class="panel caption-hero" aria-label="实时字幕">
-        <div class="panel-heading">
-          <div>
-            <h2>实时字幕</h2>
+    <main class="page-shell classroom-page classroom-focus-page" v-loading="loading">
+      <div class="focus-topline">
+        <div class="focus-title">
+          <span class="focus-kicker">LIVE CLASSROOM</span>
+          <div class="focus-title-row">
+            <h1>{{ lessonTitle || '教师课堂' }}</h1>
+            <span class="focus-room-code">房间码 <strong>{{ roomCode }}</strong></span>
           </div>
-          <div class="caption-hero-actions">
-            <el-tag :type="listening ? 'success' : 'info'" size="large">
-              {{ listening ? '识别中' : '未开始' }}
-            </el-tag>
+        </div>
+        <div class="focus-top-actions">
+          <el-button @click="copyCode">复制房间码</el-button>
+          <span class="connection-pill" :class="connectionState">
+            <span class="connection-dot"></span>{{ connectionText }}
+          </span>
+          <el-tag :type="status === 'LIVE' ? 'success' : 'info'" size="large">
+            {{ status === 'LIVE' ? '课堂进行中' : '课堂已结束' }}
+          </el-tag>
+        </div>
+      </div>
+
+      <section class="caption-focus" aria-label="实时字幕">
+        <div class="caption-toolbar">
+          <span class="caption-label">实时字幕</span>
+          <el-tag :type="listening ? 'success' : 'info'" size="small">
+            {{ listening ? '识别中' : '未开始' }}
+          </el-tag>
+          <div class="caption-toolbar-actions">
             <el-button type="primary" :disabled="status !== 'LIVE' || !speechSupported" @click="toggleSpeech">
               {{ listening ? '停止语音字幕' : '开始语音字幕' }}
             </el-button>
-            <el-button :disabled="status !== 'LIVE'" @click="sendDemoCaption">
-              发送下一句演示字幕
-            </el-button>
+            <el-button :disabled="status !== 'LIVE'" @click="sendDemoCaption">发送演示字幕</el-button>
           </div>
         </div>
         <div class="caption-big" aria-live="polite">
@@ -54,58 +46,49 @@
         </p>
       </section>
 
-      <div class="classroom-grid">
-        <section class="panel classroom-main-panel">
-          <div class="panel-heading">
-            <div>
-              <h2>幻灯片</h2>
-              <p class="muted">第 {{ page }} / {{ pageCount || 0 }} 页</p>
-            </div>
-            <span class="muted">学生端自动跟随页码</span>
+      <section class="ppt-focus">
+        <PdfStage class="ppt-stage-focus" :source="pdfUrl" :page="page" empty-text="PDF 加载中" />
+        <div class="ppt-controlbar">
+          <div class="page-nav">
+            <el-button :disabled="status !== 'LIVE' || page <= 1" @click="go(-1)">上一页</el-button>
+            <span class="page-indicator">第 {{ page }} / {{ pageCount || 0 }} 页</span>
+            <el-button type="primary" :disabled="status !== 'LIVE' || page >= pageCount" @click="go(1)">下一页</el-button>
           </div>
-          <PdfStage :source="pdfUrl" :page="page" empty-text="PDF 加载中" />
-          <div class="actions-row classroom-controls">
-            <el-button size="large" :disabled="status !== 'LIVE' || page <= 1" @click="go(-1)">上一页</el-button>
-            <el-button size="large" type="primary" :disabled="status !== 'LIVE' || page >= pageCount"
-                       @click="go(1)">下一页</el-button>
-            <span class="spacer"></span>
-            <el-button type="danger" plain :disabled="status !== 'LIVE'" @click="endClass">结束课堂</el-button>
+          <el-switch v-model="showDanmaku" active-text="弹幕显示" inactive-text="弹幕隐藏" />
+          <el-button @click="recordsVisible = true">
+            课堂记录
+            <span class="record-count">{{ captions.length + danmaku.length }}</span>
+          </el-button>
+          <span class="spacer"></span>
+          <el-button type="danger" plain :disabled="status !== 'LIVE'" @click="endClass">结束课堂</el-button>
+        </div>
+      </section>
+    </main>
+
+    <el-drawer v-model="recordsVisible" title="课堂记录" direction="btt" size="48%">
+      <div class="records-grid">
+        <section class="record-panel">
+          <div class="record-heading"><h3>字幕记录</h3><span>{{ captions.length }} 条</span></div>
+          <div class="caption-history" aria-label="字幕记录">
+            <div v-for="item in captions" :key="item.id" class="caption-line">
+              <time>{{ formatTime(item.createdAt) }}</time>
+              {{ item.text || item.content }}
+            </div>
+            <div v-if="!captions.length" class="empty-note">暂无字幕记录</div>
           </div>
         </section>
-
-        <section class="panel classroom-side-panel">
-          <div class="side-block classroom-history-block">
-            <div class="side-heading">
-              <h3>字幕记录</h3>
-              <span class="muted">共 {{ captions.length }} 条</span>
+        <section v-if="showDanmaku" class="record-panel">
+          <div class="record-heading"><h3>学生弹幕</h3><span>{{ danmaku.length }} 条</span></div>
+          <div class="danmaku-list" aria-live="polite">
+            <div v-for="item in danmaku" :key="item.id" class="danmaku-item">
+              <strong>{{ item.userName }}</strong>
+              <p>{{ item.content }}</p>
             </div>
-            <div class="caption-history" aria-label="字幕记录">
-              <div v-for="item in captions" :key="item.id" class="caption-line">
-                <time>{{ formatTime(item.createdAt) }}</time>
-                {{ item.text || item.content }}
-              </div>
-              <div v-if="!captions.length" class="empty-note">暂无字幕记录</div>
-            </div>
-          </div>
-
-          <div class="side-block classroom-danmaku-block">
-            <div class="side-heading">
-              <h3>学生弹幕</h3>
-              <el-switch v-model="showDanmaku" active-text="显示" inactive-text="隐藏" />
-            </div>
-            <div v-if="showDanmaku" class="danmaku-list" aria-live="polite">
-              <div v-for="item in danmaku" :key="item.id" class="danmaku-item">
-                <strong>{{ item.userName }}</strong>
-                <p>{{ item.content }}</p>
-              </div>
-              <div v-if="!danmaku.length" class="empty-note">还没有学生发送弹幕</div>
-            </div>
+            <div v-if="!danmaku.length" class="empty-note">还没有学生发送弹幕</div>
           </div>
         </section>
       </div>
-    </main>
-
-
+    </el-drawer>
   </div>
 </template>
 
@@ -136,6 +119,7 @@ const captions = ref([])
 const currentCaption = ref('')
 const danmaku = ref([])
 const showDanmaku = ref(true)
+const recordsVisible = ref(false)
 const speechSupported = ref(false)
 const speechUnavailableReason = ref('')
 const listening = ref(false)

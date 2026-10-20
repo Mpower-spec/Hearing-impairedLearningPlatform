@@ -11,6 +11,15 @@ const routes = [
     meta: { role: 'TEACHER' }
   },
   {
+    path: '/teacher/classrooms',
+    component: () => import('../views/TeacherClassroomsView.vue'),
+    meta: { role: 'TEACHER' }
+  },
+  {
+    path: '/teacher/prepare-center',
+    component: () => import('../views/TeacherPrepareCenterView.vue'),
+    meta: { role: 'TEACHER' }
+  },  {
     path: '/teacher/prepare/:id',
     component: () => import('../views/TeacherPrepareView.vue'),
     meta: { role: 'TEACHER' }

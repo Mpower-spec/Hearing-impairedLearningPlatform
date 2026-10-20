@@ -82,6 +82,7 @@
           <button v-for="item in shortcuts" :key="item.title" class="shortcut-card" :class="`shortcut-card--${item.tone}`" @click="navigate(item.path)">
             <span class="shortcut-icon"><el-icon><component :is="item.icon" /></el-icon></span>
             <span class="shortcut-copy">
+              <span v-if="item.badge" class="shortcut-badge">{{ item.badge }}</span>
               <strong>{{ item.title }}</strong>
               <small>{{ item.description }}</small>
             </span>
@@ -125,8 +126,8 @@ const slides = computed(() => {
       title: '课堂进度，\n始终同步',
       description: '教师切换 PPT，学生端自动跟随；字幕、弹幕和课堂状态在同一个房间里实时呈现。',
       points: ['PPT 页码同步', '房间码加入', '静态弹幕'],
-      action: teacher ? '/teacher/lessons' : '/student/join',
-      actionLabel: teacher ? '管理课堂' : '输入房间码'
+      action: teacher ? '/teacher/classrooms' : '/student/join',
+      actionLabel: teacher ? '进入课堂列表' : '输入房间码'
     },
     {
       key: 'materials',
@@ -135,21 +136,20 @@ const slides = computed(() => {
       title: '把课堂，\n沉淀成资料',
       description: '课堂结束后，学生可以自行生成摘要、重点、术语和测验，也能从视频中整理学习笔记。',
       points: ['AI 摘要', '术语与测验', '视频笔记'],
-      action: teacher ? '/teacher/lessons' : '/student/videos',
-      actionLabel: teacher ? '查看备课' : '开始视频学习'
+      action: teacher ? '/teacher/prepare-center' : '/student/videos',
+      actionLabel: teacher ? '进入备课中心' : '开始视频学习'
     }
   ]
 })
 
 const shortcuts = computed(() => role.value === 'TEACHER' ? [
-  { title: '课程与课件', description: '上传 PPTX，管理课程与备课内容', path: '/teacher/lessons', icon: Folder, tone: 'blue' },
-  { title: '实时课堂', description: '创建房间码，同步 PPT 与课堂字幕', path: '/teacher/lessons', icon: VideoCamera, tone: 'teal' },
-  { title: '备课中心', description: '根据课件生成教学目标与练习', path: '/teacher/lessons', icon: MagicStick, tone: 'amber' }
+  { title: '课程与课件', description: '上传 PPTX，管理课程与课件内容', path: '/teacher/lessons', icon: Folder, tone: 'blue', badge: '课程库' },
+  { title: '实时课堂', description: '查看正在同步和历史课堂记录', path: '/teacher/classrooms', icon: VideoCamera, tone: 'teal', badge: 'LIVE' },
+  { title: '备课中心', description: '选择课程，生成教学目标与练习', path: '/teacher/prepare-center', icon: MagicStick, tone: 'amber', badge: 'AI' }
 ] : [
   { title: '加入课堂', description: '输入房间码，进入同步课堂', path: '/student/join', icon: Monitor, tone: 'blue' },
   { title: '视频学习', description: '上传视频，生成字幕与学习笔记', path: '/student/videos', icon: VideoCamera, tone: 'teal' }
 ])
-
 function navigate(path) {
   router.push(path)
 }
@@ -304,7 +304,10 @@ function navigate(path) {
 .shortcut-card--blue .shortcut-icon { background: #e4f3f8; color: #0b6e99; }
 .shortcut-card--teal .shortcut-icon { background: #e2f5ef; color: #1f8a70; }
 .shortcut-card--amber .shortcut-icon { background: #fff1c7; color: #a96c00; }
+.shortcut-card--teal .shortcut-badge { background: #e2f5ef; color: #1f8a70; }
+.shortcut-card--amber .shortcut-badge { background: #fff1c7; color: #a96c00; }
 .shortcut-copy { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.shortcut-badge { align-self: flex-start; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 900; letter-spacing: .08em; background: #eef4f8; color: var(--primary-strong); }
 .shortcut-copy strong { font-size: 18px; }
 .shortcut-copy small { color: var(--ink-soft); font-size: 13px; line-height: 1.55; }
 .shortcut-arrow { margin-left: auto; color: #8aa2b2; font-size: 19px; }
