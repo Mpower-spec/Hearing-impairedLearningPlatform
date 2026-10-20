@@ -35,11 +35,14 @@
           <el-table-column label="创建时间" min-width="170">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="190" fixed="right">
+          <el-table-column label="操作" width="270" fixed="right">
             <template #default="{ row }">
               <el-button text type="primary" @click="router.push(`/teacher/prepare/${row.id}`)">备课</el-button>
               <el-button type="primary" plain :loading="creatingId === row.id" @click="openRoom(row)">
                 开课
+              </el-button>
+              <el-button text type="danger" :loading="deletingId === row.id" @click="deleteLesson(row)">
+                删除
               </el-button>
             </template>
           </el-table-column>
@@ -86,7 +89,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import AppHeader from '../components/AppHeader.vue'
 import http from '../api/http.js'
 
@@ -95,6 +98,7 @@ const lessons = ref([])
 const loading = ref(false)
 const uploading = ref(false)
 const creatingId = ref(null)
+const deletingId = ref(null)
 const uploadVisible = ref(false)
 const uploadTitle = ref('')
 const uploadFile = ref(null)
@@ -151,6 +155,31 @@ async function openRoom(lesson) {
     router.push(`/teacher/classroom/${room.id}`)
   } finally {
     creatingId.value = null
+  }
+}
+
+async function deleteLesson(lesson) {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除课程“${lesson.title}”吗？课程文件、课堂记录、字幕、弹幕和 AI 资料都会一并删除，且无法恢复。`,
+      '删除课程',
+      {
+        type: 'warning',
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        confirmButtonClass: 'el-button--danger'
+      }
+    )
+  } catch {
+    return
+  }
+  deletingId.value = lesson.id
+  try {
+    await http.delete(`/lessons/${lesson.id}`)
+    ElMessage.success('课程已删除')
+    await load()
+  } finally {
+    deletingId.value = null
   }
 }
 

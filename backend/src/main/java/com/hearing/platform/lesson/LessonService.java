@@ -3,6 +3,16 @@ package com.hearing.platform.lesson;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hearing.platform.auth.AuthUser;
 import com.hearing.platform.common.BusinessException;
+import com.hearing.platform.material.Material;
+import com.hearing.platform.material.MaterialMapper;
+import com.hearing.platform.room.Caption;
+import com.hearing.platform.room.CaptionMapper;
+import com.hearing.platform.room.Danmaku;
+import com.hearing.platform.room.DanmakuMapper;
+import com.hearing.platform.room.Room;
+import com.hearing.platform.room.RoomMapper;
+import com.hearing.platform.room.RoomMember;
+import com.hearing.platform.room.RoomMemberMapper;
 import com.hearing.platform.storage.FileStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +31,24 @@ public class LessonService {
     private final LessonMapper lessonMapper;
     private final PptConversionService conversionService;
     private final FileStorageService storageService;
+    private final RoomMapper roomMapper;
+    private final RoomMemberMapper roomMemberMapper;
+    private final CaptionMapper captionMapper;
+    private final DanmakuMapper danmakuMapper;
+    private final MaterialMapper materialMapper;
 
     public LessonService(LessonMapper lessonMapper, PptConversionService conversionService,
-                         FileStorageService storageService) {
+                         FileStorageService storageService, RoomMapper roomMapper,
+                         RoomMemberMapper roomMemberMapper, CaptionMapper captionMapper,
+                         DanmakuMapper danmakuMapper, MaterialMapper materialMapper) {
         this.lessonMapper = lessonMapper;
         this.conversionService = conversionService;
         this.storageService = storageService;
+        this.roomMapper = roomMapper;
+        this.roomMemberMapper = roomMemberMapper;
+        this.captionMapper = captionMapper;
+        this.danmakuMapper = danmakuMapper;
+        this.materialMapper = materialMapper;
     }
 
     @Transactional
@@ -79,6 +101,30 @@ public class LessonService {
             throw BusinessException.forbidden("无权访问该课程");
         }
         return lesson;
+    }
+
+    @Transactional
+    public void deleteOwned(Long lessonId, AuthUser teacher) {
+        Lesson lesson = requireOwned(lessonId, teacher);
+        List<Room> rooms = roomMapper.selectList(new LambdaQueryWrapper<Room>()
+                .eq(Room::getLessonId, lessonId));
+        boolean hasLiveRoom = rooms.stream().anyMatch(room -> "LIVE".equals(room.getStatus()));
+        if (hasLiveRoom) {
+            throw new BusinessException("请先结束课堂再删除课程");
+        }
+
+        List<Long> roomIds = rooms.stream().map(Room::getId).toList();
+        if (!roomIds.isEmpty()) {
+            danmakuMapper.delete(new LambdaQueryWrapper<Danmaku>().in(Danmaku::getRoomId, roomIds));
+            captionMapper.delete(new LambdaQueryWrapper<Caption>().in(Caption::getRoomId, roomIds));
+            roomMemberMapper.delete(new LambdaQueryWrapper<RoomMember>().in(RoomMember::getRoomId, roomIds));
+            roomMapper.delete(new LambdaQueryWrapper<Room>().eq(Room::getLessonId, lessonId));
+        }
+        materialMapper.delete(new LambdaQueryWrapper<Material>().eq(Material::getLessonId, lessonId));
+        lessonMapper.deleteById(lessonId);
+
+        storageService.deleteQuietly(lesson.getPptxPath());
+        storageService.deleteQuietly(lesson.getPdfPath());
     }
 
     public Lesson get(Long lessonId) {
