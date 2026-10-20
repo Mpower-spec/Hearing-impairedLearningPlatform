@@ -2,8 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { session, homeForRole } from '../auth/session.js'
 
 const routes = [
-  { path: '/', redirect: '/login' },
+  { path: '/', redirect: '/home' },
   { path: '/login', component: () => import('../views/LoginView.vue') },
+  { path: '/home', component: () => import('../views/HomeView.vue') },
   {
     path: '/teacher/lessons',
     component: () => import('../views/TeacherLessonsView.vue'),

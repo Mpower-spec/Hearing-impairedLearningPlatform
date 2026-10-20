@@ -54,6 +54,7 @@ public class RoomService {
         if (lesson.getPdfPath() == null || lesson.getPdfPath().isBlank()) {
             throw new BusinessException("课程尚未完成 PPT 转换");
         }
+        closeLiveRoomsForLesson(lessonId);
         Room room = new Room();
         room.setLessonId(lessonId);
         room.setRoomCode(generateCode());
@@ -286,6 +287,18 @@ public class RoomService {
         return new RoomDto(room.getId(), room.getLessonId(), lesson.getTitle(), room.getRoomCode(),
                 room.getCurrentPage(), room.getStatus(), storageService.url(lesson.getPdfPath()),
                 lesson.getPageCount(), room.getCreatedAt(), room.getEndedAt());
+    }
+
+    private void closeLiveRoomsForLesson(Long lessonId) {
+        List<Room> liveRooms = roomMapper.selectList(new LambdaQueryWrapper<Room>()
+                .eq(Room::getLessonId, lessonId)
+                .eq(Room::getStatus, "LIVE"));
+        LocalDateTime now = LocalDateTime.now();
+        for (Room liveRoom : liveRooms) {
+            liveRoom.setStatus("ENDED");
+            liveRoom.setEndedAt(now);
+            roomMapper.updateById(liveRoom);
+        }
     }
 
     private String generateCode() {
