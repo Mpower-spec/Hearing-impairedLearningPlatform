@@ -8,6 +8,7 @@
       </div>
     </div>
     <div class="header-actions">
+      <el-button v-if="route.path !== '/home'" text @click="router.push('/home')">返回首页</el-button>
       <slot />
       <span class="user-chip">
         {{ session.user?.name || session.user?.username }}
@@ -20,9 +21,10 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { session, clearSession, homeForRole } from '../auth/session.js'
 
+const route = useRoute()
 const router = useRouter()
 const home = computed(() => homeForRole())
 const roleLabel = computed(() => session.user?.role === 'TEACHER' ? '教师' : '学生')

@@ -27,6 +27,6 @@ export function clearSession() {
   localStorage.removeItem('hp_user')
 }
 
-export function homeForRole(role = session.user?.role) {
-  return role === 'TEACHER' ? '/teacher/lessons' : '/student/join'
+export function homeForRole() {
+  return '/home'
 }
