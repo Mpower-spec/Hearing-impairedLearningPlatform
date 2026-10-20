@@ -1,0 +1,34 @@
+# Build outputs
+backend/target/
+frontend/node_modules/
+frontend/dist/
+uploads/
+
+# Local secrets and environment
+backend/config/local.properties
+.env
+*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+# Local media tools and test artifacts
+tools/node_modules/
+tools/libreoffice/
+tools/*.msi
+tools/lo-profile*/
+tools/sample*
+tools/*.txt
+# LibreOffice isolated profile
+backend/.libreoffice-profile/
+
+# Local runtime tools (LibreOffice, FFmpeg, test artifacts)
+tools/

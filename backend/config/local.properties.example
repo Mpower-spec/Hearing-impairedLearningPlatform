@@ -1,0 +1,14 @@
+# Copy this file to local.properties and fill in your local values.
+# Never commit local.properties.
+DB_USERNAME=root
+DB_PASSWORD=your_mysql_password
+SILICONFLOW_API_KEY=sk-your-key
+# Optional overrides:
+# DB_URL=jdbc:mysql://localhost:3306/hearing_platform?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+# JWT_SECRET=replace-with-a-random-secret-at-least-32-characters
+# LIBREOFFICE_PATH=C:/Program Files/LibreOffice/program/soffice.exe
+# FFMPEG_PATH=ffmpeg
+# FFPROBE_PATH=ffprobe
+# AI_MODE=auto
+# SILICONFLOW_LLM_MODEL=Qwen/Qwen2.5-72B-Instruct
+# SILICONFLOW_ASR_MODEL=FunAudioLLM/SenseVoiceSmall

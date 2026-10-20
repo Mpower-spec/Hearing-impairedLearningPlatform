@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: hearing-platform
+  config:
+    import:
+      - optional:file:./config/local.properties
+      - optional:file:./backend/config/local.properties
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/hearing_platform?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 110MB
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  upload-root: ${UPLOAD_ROOT:./uploads}
+  libreoffice-path: ${LIBREOFFICE_PATH:C:/Program Files/LibreOffice/program/soffice.exe}
+  ffmpeg-path: ${FFMPEG_PATH:ffmpeg}
+  ffprobe-path: ${FFPROBE_PATH:ffprobe}
+  jwt-secret: ${JWT_SECRET:hearing-platform-demo-only-secret-change-me-2026}
+  jwt-expiration-hours: ${JWT_EXPIRATION_HOURS:8}
+
+ai:
+  mode: ${AI_MODE:auto}
+  fallback-enabled: ${AI_FALLBACK_ENABLED:true}
+  siliconflow:
+    base-url: ${SILICONFLOW_BASE_URL:https://api.siliconflow.cn/v1}
+    api-key: ${SILICONFLOW_API_KEY:}
+    llm-model: ${SILICONFLOW_LLM_MODEL:Qwen/Qwen2.5-72B-Instruct}
+    asr-model: ${SILICONFLOW_ASR_MODEL:FunAudioLLM/SenseVoiceSmall}
+
+server:
+  address: 0.0.0.0
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com.hearing.platform: INFO
