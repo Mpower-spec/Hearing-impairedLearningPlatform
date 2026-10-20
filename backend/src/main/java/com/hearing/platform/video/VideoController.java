@@ -4,6 +4,7 @@ import com.hearing.platform.auth.AuthContext;
 import com.hearing.platform.auth.RequireRole;
 import com.hearing.platform.auth.Roles;
 import com.hearing.platform.common.ApiResponse;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +36,12 @@ public class VideoController {
     public ApiResponse<VideoDto> upload(@RequestParam String title,
                                         @RequestPart("file") MultipartFile file) {
         return ApiResponse.ok("视频已上传", videoService.upload(AuthContext.get(), title, file));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> delete(@PathVariable Long id) {
+        videoService.deleteOwned(id, AuthContext.get());
+        return ApiResponse.ok("视频已删除", null);
     }
 
     @GetMapping("/{id}")

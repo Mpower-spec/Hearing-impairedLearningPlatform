@@ -59,6 +59,9 @@
             <el-button type="warning" :loading="noting" :disabled="!selected?.transcript" @click="generateNote">
               {{ selected?.note ? '重新生成笔记' : '生成学习笔记' }}
             </el-button>
+            <el-button type="danger" plain :loading="deleting" :disabled="!selected" @click="deleteVideo">
+              删除视频
+            </el-button>
           </div>
         </section>
 
@@ -103,7 +106,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import AppHeader from '../components/AppHeader.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
 import http from '../api/http.js'
@@ -115,6 +118,7 @@ const loading = ref(false)
 const uploading = ref(false)
 const transcribing = ref(false)
 const noting = ref(false)
+const deleting = ref(false)
 const uploadTitle = ref('')
 const uploadFile = ref(null)
 const uploadRef = ref(null)
@@ -198,6 +202,34 @@ async function generateNote() {
     ElMessage.success(updated.noteSource === 'MOCK' ? '已生成演示兜底笔记' : '学习笔记已生成')
   } finally {
     noting.value = false
+  }
+}
+
+async function deleteVideo() {
+  if (!selected.value) return
+  const target = selected.value
+  try {
+    await ElMessageBox.confirm(
+      `确定删除视频“${target.title}”吗？视频文件、音频、字幕、转写文本和学习笔记都会被删除，且无法恢复。`,
+      '删除视频',
+      {
+        type: 'warning',
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        confirmButtonClass: 'el-button--danger'
+      }
+    )
+  } catch {
+    return
+  }
+  deleting.value = true
+  try {
+    await http.delete(`/videos/${target.id}`)
+    videos.value = videos.value.filter((video) => video.id !== target.id)
+    selected.value = videos.value[0] || null
+    ElMessage.success('视频已删除')
+  } finally {
+    deleting.value = false
   }
 }
 

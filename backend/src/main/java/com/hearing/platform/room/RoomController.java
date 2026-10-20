@@ -31,6 +31,12 @@ public class RoomController {
         return ApiResponse.ok("课堂已创建", roomService.create(AuthContext.get(), request.lessonId()));
     }
 
+    @GetMapping("/mine")
+    @RequireRole(Roles.TEACHER)
+    public ApiResponse<List<RoomDto>> mine() {
+        return ApiResponse.ok(roomService.listForTeacher(AuthContext.get()));
+    }
+
     @GetMapping("/by-code/{roomCode}")
     public ApiResponse<RoomDto> byCode(@PathVariable String roomCode) {
         return ApiResponse.ok(roomService.previewByCode(roomCode, AuthContext.get()));
