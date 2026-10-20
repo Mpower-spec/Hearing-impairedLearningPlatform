@@ -161,7 +161,7 @@ async function openRoom(lesson) {
 async function deleteLesson(lesson) {
   try {
     await ElMessageBox.confirm(
-      `确定删除课程“${lesson.title}”吗？课程文件、课堂记录、字幕、弹幕和 AI 资料都会一并删除，且无法恢复。`,
+      `确定删除课程“${lesson.title}”吗？课程文件、所有课堂记录、进行中的课堂、字幕、弹幕和 AI 资料都会一并删除，且无法恢复。`,
       '删除课程',
       {
         type: 'warning',

@@ -108,11 +108,6 @@ public class LessonService {
         Lesson lesson = requireOwned(lessonId, teacher);
         List<Room> rooms = roomMapper.selectList(new LambdaQueryWrapper<Room>()
                 .eq(Room::getLessonId, lessonId));
-        boolean hasLiveRoom = rooms.stream().anyMatch(room -> "LIVE".equals(room.getStatus()));
-        if (hasLiveRoom) {
-            throw new BusinessException("请先结束课堂再删除课程");
-        }
-
         List<Long> roomIds = rooms.stream().map(Room::getId).toList();
         if (!roomIds.isEmpty()) {
             danmakuMapper.delete(new LambdaQueryWrapper<Danmaku>().in(Danmaku::getRoomId, roomIds));
