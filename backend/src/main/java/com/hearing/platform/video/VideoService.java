@@ -61,6 +61,15 @@ public class VideoService {
         return video;
     }
 
+    @Transactional
+    public void deleteOwned(Long videoId, AuthUser user) {
+        Video video = requireOwned(videoId, user);
+        videoMapper.deleteById(videoId);
+        storageService.deleteQuietly(video.getVideoPath());
+        storageService.deleteQuietly(video.getAudioPath());
+        storageService.deleteQuietly(video.getVttPath());
+    }
+
     public VideoDto detail(Long videoId, AuthUser user) {
         return toDto(requireOwned(videoId, user));
     }
