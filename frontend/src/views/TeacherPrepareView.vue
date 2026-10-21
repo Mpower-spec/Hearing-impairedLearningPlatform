@@ -44,6 +44,7 @@
         </section>
       </div>
     </main>
+    <SignAvatarWidget />
   </div>
 </template>
 
@@ -54,6 +55,7 @@ import { ElMessage } from 'element-plus'
 import AppHeader from '../components/AppHeader.vue'
 import PdfStage from '../components/PdfStage.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
+import SignAvatarWidget from '../components/SignAvatarWidget.vue'
 import http from '../api/http.js'
 
 const route = useRoute()
