@@ -44,7 +44,7 @@
         </section>
       </div>
     </main>
-    <SignAvatarWidget />
+    <SignAvatarWidget initial-text="你好，欢迎使用听障学习平台" sign-text="你好，欢迎使用，听障学习平台" />
   </div>
 </template>
 

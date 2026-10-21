@@ -91,6 +91,7 @@
         </div>
       </section>
     </main>
+    <SignAvatarWidget initial-text="你好，欢迎使用听障学习平台" sign-text="你好，欢迎使用，听障学习平台" />
   </div>
 </template>
 
@@ -99,6 +100,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight, Document, Folder, MagicStick, Microphone, Monitor, VideoCamera } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
+import SignAvatarWidget from '../components/SignAvatarWidget.vue'
 import { session } from '../auth/session.js'
 
 const router = useRouter()

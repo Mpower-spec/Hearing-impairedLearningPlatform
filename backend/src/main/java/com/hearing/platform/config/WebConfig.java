@@ -1,6 +1,7 @@
 package com.hearing.platform.config;
 
-import com.hearing.platform.auth.AuthInterceptor;
+import com.hearing.platform.security.AuthInterceptor;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

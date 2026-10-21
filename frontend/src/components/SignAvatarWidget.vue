@@ -6,6 +6,7 @@
       <el-button size="small" type="primary" @click="showAvatar">显示</el-button>
     </div>
     <div v-else class="avatar-control-card">
+      <p class="avatar-greeting-text">{{ initialText }}</p>
       <div class="avatar-control-heading">
         <span class="avatar-status-dot" :class="status"></span>
         <div>
@@ -15,7 +16,7 @@
       </div>
       <p v-if="status === 'error'" class="avatar-error">{{ errorMessage }}</p>
       <div class="avatar-control-actions">
-        <el-button size="small" type="primary" :disabled="status !== 'ready'" @click="playHello">重播“你好”</el-button>
+        <el-button size="small" type="primary" :disabled="status !== 'ready'" @click="playHello">重播欢迎语</el-button>
         <el-button v-if="status === 'error'" size="small" @click="retry">重试</el-button>
         <el-button v-else size="small" text :disabled="status !== 'ready'" @click="hideAvatar">隐藏</el-button>
       </div>
@@ -29,6 +30,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const props = defineProps({
   initialText: { type: String, default: '你好' },
+  signText: { type: String, default: '' },
   autoPlay: { type: Boolean, default: true }
 })
 const emit = defineEmits(['ready', 'error', 'visibility-change'])
@@ -40,8 +42,14 @@ let sharedReady = false
 let sharedAutoPlayed = false
 let disposed = false
 let readyTimer = null
+let greetingQueue = []
+let greetingIndex = 0
+let greetingPlaying = false
+let greetingFallbackTimer = null
+let lastGreetingAdvanceAt = 0
 
 const status = ref('loading')
+const playbackText = computed(() => props.signText || props.initialText)
 const errorMessage = ref('')
 const hidden = ref(false)
 
@@ -94,6 +102,7 @@ function showAvatar() {
 
 function hideAvatar() {
   hidden.value = true
+  stopGreetingQueue()
   if (sharedApp) {
     try { sharedApp.cancelTranslation() } catch { /* ignored */ }
     try { sharedApp.disableYiyuApp() } catch { /* ignored */ }
@@ -102,17 +111,78 @@ function hideAvatar() {
   emit('visibility-change', false)
 }
 
-function playHello() {
-  if (!sharedApp || status.value !== 'ready') return
+function splitSignSegments(text) {
+  return String(text || '')
+    .split(/[，,。.!?！？；;]/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+function scheduleGreetingFallback() {
+  clearTimeout(greetingFallbackTimer)
+  greetingFallbackTimer = window.setTimeout(() => {
+    if (greetingPlaying) advanceGreeting()
+  }, 6000)
+}
+
+function advanceGreeting() {
+  if (!greetingPlaying || !sharedApp) return
+  if (greetingIndex >= greetingQueue.length) {
+    greetingPlaying = false
+    clearTimeout(greetingFallbackTimer)
+    return
+  }
+  const next = greetingQueue[greetingIndex]
+  greetingIndex += 1
   try {
-    sharedApp.startTranslate(props.initialText)
+    sharedApp.appendTranslate(next)
+    scheduleGreetingFallback()
   } catch (error) {
+    greetingPlaying = false
+    clearTimeout(greetingFallbackTimer)
     errorMessage.value = `播放失败：${error.message}`
     status.value = 'error'
     emit('error', error)
   }
 }
 
+function handleSentenceFinished() {
+  const now = Date.now()
+  if (now - lastGreetingAdvanceAt < 800) return
+  lastGreetingAdvanceAt = now
+  clearTimeout(greetingFallbackTimer)
+  advanceGreeting()
+}
+
+function stopGreetingQueue() {
+  greetingPlaying = false
+  greetingQueue = []
+  greetingIndex = 0
+  clearTimeout(greetingFallbackTimer)
+  greetingFallbackTimer = null
+  lastGreetingAdvanceAt = 0
+}
+
+function playHello() {
+  if (!sharedApp || status.value !== 'ready') return
+  const segments = splitSignSegments(playbackText.value)
+  if (!segments.length) return
+  try {
+    sharedApp.cancelTranslation()
+    stopGreetingQueue()
+    greetingQueue = segments
+    greetingIndex = 1
+    greetingPlaying = true
+    lastGreetingAdvanceAt = Date.now()
+    sharedApp.startTranslate(segments[0])
+    scheduleGreetingFallback()
+  } catch (error) {
+    greetingPlaying = false
+    errorMessage.value = `播放失败：${error.message}`
+    status.value = 'error'
+    emit('error', error)
+  }
+}
 function onAppReady() {
   if (disposed) return
   clearTimeout(readyTimer)
@@ -120,6 +190,7 @@ function onAppReady() {
   sharedReady = true
   errorMessage.value = ''
   try { sharedApp.setIsShowTextarea(false) } catch { /* optional SDK UI */ }
+  try { sharedApp.onSentenceFinished(handleSentenceFinished) } catch { /* optional SDK callback */ }
   try { sharedApp.setAvatarSize(4) } catch { /* optional SDK sizing */ }
   restorePointerEvents()
   emit('ready')
@@ -175,6 +246,7 @@ function retry() {
 onMounted(initializeAvatar)
 onBeforeUnmount(() => {
   disposed = true
+  stopGreetingQueue()
   clearTimeout(readyTimer)
   if (sharedApp) {
     try { sharedApp.cancelTranslation() } catch { /* ignored */ }
@@ -202,6 +274,7 @@ onBeforeUnmount(() => {
 }
 .avatar-control-card { width: 228px; padding: 12px 14px; }
 .avatar-restore-card { display: flex; align-items: center; gap: 8px; padding: 9px 11px; color: var(--ink-soft); font-size: 13px; }
+.avatar-greeting-text { margin: 0 0 9px; color: var(--ink); font-size: 15px; line-height: 1.45; font-weight: 800; }
 .avatar-control-heading { display: flex; align-items: center; gap: 9px; }
 .avatar-control-heading strong, .avatar-control-heading small { display: block; }
 .avatar-control-heading strong { font-size: 14px; color: var(--ink); }

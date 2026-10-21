@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("com.hearing.platform")
+@MapperScan("com.hearing.platform.dao")
 public class HearingPlatformApplication {
 
     public static void main(String[] args) {

@@ -32,6 +32,25 @@ tools/                    本地媒体工具（LibreOffice、FFmpeg/FFprobe）
 uploads/                  运行时文件，启动后自动创建
 ```
 
+### 后端分层结构
+
+后端位于 `backend/src/main/java/com/hearing/platform/`，遵循 SSM 风格的分层与依赖方向：
+
+```text
+controller/        REST 接口，只负责参数接收、权限注解和统一响应
+service/           业务规则、事务编排、文件与 AI 流程
+dao/               MyBatis-Plus Mapper，负责数据库访问
+entity/            数据库实体，与表结构一一对应
+dto/               接口请求/响应模型
+security/          JWT、登录上下文、角色校验
+websocket/         课堂实时消息适配层
+client/            SiliconFlow LLM / ASR 外部服务客户端
+config/            配置属性、Bean 初始化与演示账号初始化
+common/            统一响应、业务异常与全局异常处理
+```
+
+依赖方向保持为 `controller/websocket -> service -> dao -> entity`；Controller 不直接访问 Mapper，DAO 不依赖业务层。
+
 ## 前置条件
 
 - JDK 17+、Maven 3.9+
