@@ -1,18 +1,18 @@
 package com.hearing.platform.service;
 
-import com.hearing.platform.ai.AiResult;
-import com.hearing.platform.ai.MockContent;
-import com.hearing.platform.ai.PromptTemplates;
-import com.hearing.platform.client.AsrClient;
-import com.hearing.platform.client.LlmClient;
+import com.hearing.platform.ai.AiResult;          // AI 结果封装（内容 + 来源）
+import com.hearing.platform.ai.MockContent;       // 降级用的模拟内容
+import com.hearing.platform.ai.PromptTemplates;   // 提示词模板
+import com.hearing.platform.client.AsrClient;     // 语音识别客户端
+import com.hearing.platform.client.LlmClient;     // 大模型客户端
 import com.hearing.platform.common.BusinessException;
-import com.hearing.platform.config.AiProperties;
+import com.hearing.platform.config.AiProperties;  // AI 配置（模式/回退/密钥等）
 import com.hearing.platform.dto.MaterialDto;
 import com.hearing.platform.dto.VideoDto;
 import com.hearing.platform.entity.Caption;
 import com.hearing.platform.entity.Lesson;
 import com.hearing.platform.entity.Video;
-import com.hearing.platform.security.AuthUser;
+import com.hearing.platform.security.AuthUser;    // 已认证用户
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,17 +38,28 @@ public class AiService {
 
     private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
+    // AI 配置
     private final AiProperties properties;
+    // 大模型客户端
     private final LlmClient llmClient;
+    // 语音识别客户端
     private final AsrClient asrClient;
+    // VTT 字幕生成服务
     private final VttService vttService;
+    // 资料服务（落库）
     private final MaterialService materialService;
+    // 课程服务（归属校验）
     private final LessonService lessonService;
+    // 房间服务（字幕聚合/权限）
     private final RoomService roomService;
+    // 视频服务（读写视频记录）
     private final VideoService videoService;
+    // 媒体处理服务（抽音频/取时长）
     private final MediaProcessService mediaProcessService;
+    // 文件存储服务
     private final FileStorageService storageService;
 
+    // 构造器注入全部依赖
     public AiService(AiProperties properties, LlmClient llmClient, AsrClient asrClient,
                      VttService vttService,
                      MaterialService materialService, LessonService lessonService, RoomService roomService,
@@ -220,9 +231,9 @@ public class AiService {
                 PromptTemplates.videoNote(video.getTitle(), video.getTranscript()),
                 () -> MockContent.videoNote(video.getTitle())
         );
-        video.setNote(result.content());
-        video.setNoteSource(result.source());
-        video.setStatus("NOTE_READY");
+        video.setNote(result.content());       // 写入笔记正文
+        video.setNoteSource(result.source());  // 写入来源标记（AI/MOCK）
+        video.setStatus("NOTE_READY");         // 置为笔记就绪
         video.setUpdatedAt(LocalDateTime.now());
         videoService.update(video);
         return videoService.toDto(video);
@@ -293,7 +304,9 @@ public class AiService {
      * 仅接受 real/mock/auto 三种取值，其他或未配置均归为 auto。
      */
     private String mode() {
+        // 读取配置的模式，做空值兜底并统一为小写
         String mode = properties.getMode() == null ? "auto" : properties.getMode().trim().toLowerCase();
+        // 仅接受三种合法取值，其余归一化为 auto
         return switch (mode) {
             case "real", "mock", "auto" -> mode;
             default -> "auto";

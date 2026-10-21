@@ -1,12 +1,12 @@
 package com.hearing.platform.controller;
 
-import com.hearing.platform.common.ApiResponse;
-import com.hearing.platform.dto.MaterialDto;
-import com.hearing.platform.dto.VideoDto;
-import com.hearing.platform.security.AuthContext;
-import com.hearing.platform.security.RequireRole;
-import com.hearing.platform.security.Roles;
-import com.hearing.platform.service.AiService;
+import com.hearing.platform.common.ApiResponse;   // 统一响应封装体
+import com.hearing.platform.dto.MaterialDto;       // 学习资料展示对象
+import com.hearing.platform.dto.VideoDto;          // 视频信息展示对象
+import com.hearing.platform.security.AuthContext;  // 当前登录用户上下文
+import com.hearing.platform.security.RequireRole;  // 角色访问控制注解
+import com.hearing.platform.security.Roles;        // 角色常量定义
+import com.hearing.platform.service.AiService;     // AI 业务服务
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/ai")
 public class AiController {
 
+    // AI 业务服务，构造器注入
     private final AiService aiService;
 
+    // 构造器注入 AiService
     public AiController(AiService aiService) {
         this.aiService = aiService;
     }
@@ -38,6 +40,7 @@ public class AiController {
     @PostMapping("/prepare/{lessonId}")
     @RequireRole(Roles.TEACHER)
     public ApiResponse<MaterialDto> prepare(@PathVariable Long lessonId) {
+        // 取当前教师，服务层依据 PPT 文本生成并持久化备课资料
         return ApiResponse.ok("备课资料已生成", aiService.prepare(lessonId, AuthContext.get()));
     }
 
@@ -51,6 +54,7 @@ public class AiController {
      */
     @PostMapping("/material/{lessonId}")
     public ApiResponse<MaterialDto> material(@PathVariable Long lessonId) {
+        // 服务层按角色区分权限，基于已结束课堂的字幕生成资料
         return ApiResponse.ok("课堂学习资料已生成", aiService.classMaterial(lessonId, AuthContext.get()));
     }
 
@@ -64,6 +68,7 @@ public class AiController {
     @PostMapping("/transcribe/{videoId}")
     @RequireRole(Roles.STUDENT)
     public ApiResponse<VideoDto> transcribe(@PathVariable Long videoId) {
+        // 服务层抽取音频并 ASR 转写，生成 VTT 字幕写回视频
         return ApiResponse.ok("字幕已生成", aiService.transcribe(videoId, AuthContext.get()));
     }
 
@@ -77,6 +82,7 @@ public class AiController {
     @PostMapping("/note/{videoId}")
     @RequireRole(Roles.STUDENT)
     public ApiResponse<VideoDto> note(@PathVariable Long videoId) {
+        // 服务层基于已有字幕调用 LLM 生成学习笔记并写回视频
         return ApiResponse.ok("学习笔记已生成", aiService.note(videoId, AuthContext.get()));
     }
 }

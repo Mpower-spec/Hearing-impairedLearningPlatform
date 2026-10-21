@@ -1,10 +1,17 @@
 package com.hearing.platform.ai;
 
+/**
+ * 模拟内容（降级兜底）。
+ * 当 AI 模式为 mock 或 auto 下真实调用失败时，提供与真实输出同构的
+ * Markdown 示例内容，保证演示流程不依赖外部模型也能走通。
+ */
 public final class MockContent {
 
+    // 私有构造，禁止实例化（纯静态内容类）
     private MockContent() {
     }
 
+    // 备课资料的模拟输出（与 PromptTemplates.prepare 要求的标题结构一致）
     public static String prepare(String lessonTitle) {
         return """
                 # %s · 备课资料（演示兜底）
@@ -38,6 +45,7 @@ public final class MockContent {
                 """.formatted(lessonTitle);
     }
 
+    // 课堂学习资料的模拟输出
     public static String classMaterial(String lessonTitle) {
         return """
                 # %s · 课堂学习资料（演示兜底）
@@ -68,6 +76,7 @@ public final class MockContent {
                 """.formatted(lessonTitle);
     }
 
+    // 视频学习笔记的模拟输出
     public static String videoNote(String title) {
         return """
                 # %s · 学习笔记（演示兜底）
@@ -96,6 +105,7 @@ public final class MockContent {
                 """.formatted(title);
     }
 
+    // 视频转写文本的模拟输出（供 ASR 降级时使用）
     public static String transcript() {
         return "同学们，今天我们来学习本节课的核心内容。首先理解基本概念，然后通过一个例子观察概念之间的关系。"
                 + "请大家注意，应用知识时要先判断条件，再选择合适的方法。最后，我们回顾重点，并完成一道复习题。";
