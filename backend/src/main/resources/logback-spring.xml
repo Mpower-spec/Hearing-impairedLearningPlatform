@@ -1,44 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Logback 日志配置（Spring Boot 专用，支持 <springProperty> 读取 application.yml） -->
 <configuration>
+    <!-- 注册颜色转换词 clr：用于控制台日志按级别着色 -->
     <conversionRule conversionWord="clr"
                     converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
 
+    <!-- 日志目录：从配置项 logging.file.path 读取，默认 ./logs -->
     <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="./logs"/>
+    <!-- 文件日志格式：含时间、线程、级别、请求ID、用户ID（来自 MDC）、类名、消息 -->
     <property name="LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [requestId=%X{requestId:--}] [userId=%X{userId:--}] %logger{40} - %msg%n"/>
+    <!-- 控制台日志格式：中文标签 + 颜色着色，便于阅读 -->
     <property name="CONSOLE_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %clr(%-5level) [%thread] [requestId=%X{requestId:--}] [userId=%X{userId:--}] %logger{40} - %msg%n"/>
+              value="时间=%d{yyyy-MM-dd HH:mm:ss.SSS} 级别=%clr(%-5level) 线程=%thread [请求ID=%X{requestId:--}] [用户ID=%X{userId:--}] 类=%logger{40} - %msg%n"/>
+    <!-- 单个日志文件最大大小，超过则滚动 -->
     <property name="MAX_FILE_SIZE" value="20MB"/>
+    <!-- 归档日志保留天数 -->
     <property name="MAX_HISTORY" value="30"/>
+    <!-- 归档日志总大小上限 -->
     <property name="TOTAL_SIZE_CAP" value="2GB"/>
 
+    <!-- 控制台输出 appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 编码器：UTF-8 + 中文着色格式 -->
         <encoder>
             <charset>UTF-8</charset>
             <pattern>${CONSOLE_PATTERN}</pattern>
         </encoder>
     </appender>
 
+    <!-- 主应用日志文件 appender：滚动写入 hearing-platform.log -->
     <appender name="APPLICATION_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 当前正在写入的日志文件 -->
         <file>${LOG_PATH}/hearing-platform.log</file>
+        <!-- 滚动策略：按大小和时间双维度归档 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 归档文件名：按日期+序号，gzip 压缩 -->
             <fileNamePattern>${LOG_PATH}/archive/hearing-platform.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- 单文件超过 20MB 触发滚动 -->
             <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <!-- 归档最多保留 30 天 -->
             <maxHistory>${MAX_HISTORY}</maxHistory>
+            <!-- 归档总大小超过 2GB 时删除旧文件 -->
             <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+            <!-- 启动时清理过期归档 -->
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
+        <!-- 编码器：UTF-8 + 标准格式 -->
         <encoder>
             <charset>UTF-8</charset>
             <pattern>${LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
+    <!-- 错误日志文件 appender：单独记录 ERROR 级别 -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 当前正在写入的错误日志文件 -->
         <file>${LOG_PATH}/hearing-platform-error.log</file>
+        <!-- 阈值过滤器：只放行 ERROR 及以上级别 -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
+        <!-- 滚动策略：与其他文件 appender 相同 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/archive/hearing-platform-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
@@ -52,8 +75,11 @@
         </encoder>
     </appender>
 
+    <!-- 访问日志文件 appender：记录请求访问信息 -->
     <appender name="ACCESS_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 当前正在写入的访问日志文件 -->
         <file>${LOG_PATH}/hearing-platform-access.log</file>
+        <!-- 滚动策略：按大小和时间双维度归档 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/archive/hearing-platform-access.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
@@ -67,13 +93,17 @@
         </encoder>
     </appender>
 
+    <!-- 访问日志专用 logger：绑定 RequestLoggingFilter 使用的命名空间 -->
+    <!-- additivity=false：不再向 root 传播，避免访问日志重复写入主日志文件 -->
     <logger name="com.hearing.platform.access" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ACCESS_FILE"/>
     </logger>
 
+    <!-- 业务包日志级别：INFO，输出仍走 root 的 appender -->
     <logger name="com.hearing.platform" level="INFO"/>
 
+    <!-- 根 logger：全局默认级别 INFO，输出到控制台、主日志、错误日志 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="APPLICATION_FILE"/>
