@@ -27,6 +27,7 @@
           <el-tag :type="status === 'LIVE' ? 'success' : 'info'" size="large">
             {{ status === 'LIVE' ? '课堂进行中' : (status === 'ENDED' ? '课堂已结束' : '等待加入') }}
           </el-tag>
+
         </div>
       </div>
 
@@ -54,6 +55,7 @@
         </div>
       </section>
     </main>
+
 
     <el-drawer v-model="recordsVisible" title="课堂记录" direction="btt" size="48%">
       <div class="records-grid">
@@ -105,7 +107,9 @@ import { ElMessage } from 'element-plus'
 import AppHeader from '../components/AppHeader.vue'
 import PdfStage from '../components/PdfStage.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
+
 import http from '../api/http.js'
+import { clearSignCaptions, pushSignCaption } from '../avatar/avatarStore.js'
 import { session } from '../auth/session.js'
 
 const route = useRoute()
@@ -130,6 +134,7 @@ const recordsVisible = ref(false)
 const materialVisible = ref(false)
 const generatingMaterial = ref(false)
 const material = ref(null)
+
 
 let socket = null
 let reconnectTimer = null
@@ -213,6 +218,7 @@ async function handleMessage(message) {
     case 'caption':
       currentCaption.value = message.text
       addCaption({ id: message.id, text: message.text, createdAt: message.createdAt })
+      pushSignCaption(message.text, message.id)
       break
     case 'danmaku':
       addDanmaku(message)
@@ -221,6 +227,7 @@ async function handleMessage(message) {
       status.value = 'ENDED'
       connectionState.value = 'live'
       connectionText.value = '课堂已结束'
+      clearSignCaptions()
       ElMessage.info('课堂已结束，可以生成学习资料')
       await loadExistingMaterial()
       break
@@ -245,6 +252,7 @@ function addDanmaku(item) {
   if (!item.id || danmaku.value.some((entry) => entry.id === item.id)) return
   danmaku.value.push(item)
 }
+
 
 function sendDanmaku() {
   const text = danmakuText.value.trim()
@@ -313,6 +321,7 @@ onMounted(initialize)
 onBeforeUnmount(() => {
   manuallyClosed = true
   clearTimeout(reconnectTimer)
+  clearSignCaptions()
   try { socket?.close() } catch { /* ignored */ }
 })
 </script>

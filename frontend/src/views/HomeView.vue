@@ -9,14 +9,11 @@
           <h1>你好，{{ displayName }}</h1>
           <p>字幕优先，让课堂内容更清晰；协作同步，让每一次学习都有迹可循。</p>
         </div>
-        <div class="home-welcome-note">
-          <span class="welcome-note-dot"></span>
-          <span>为听障学生打造的课堂学习空间</span>
-        </div>
+
       </section>
 
       <section class="home-hero" aria-label="平台功能介绍">
-        <el-carousel :interval="5200" height="clamp(400px, 46vh, 480px)" arrow="always" indicator-position="inside">
+        <el-carousel :interval="5200" height="clamp(240px, 27vh, 290px)" arrow="always" indicator-position="inside">
           <el-carousel-item v-for="slide in slides" :key="slide.key">
             <article class="hero-slide" :class="`hero-slide--${slide.theme}`">
               <div class="hero-copy">
@@ -26,7 +23,7 @@
                 <div class="hero-points">
                   <span v-for="point in slide.points" :key="point">{{ point }}</span>
                 </div>
-                <el-button type="primary" size="large" class="hero-action" @click="navigate(slide.action)">
+                <el-button type="primary" class="hero-action" @click="navigate(slide.action)">
                   {{ slide.actionLabel }}
                   <el-icon><ArrowRight /></el-icon>
                 </el-button>
@@ -55,14 +52,20 @@
                 </div>
 
                 <div v-else class="material-mockup">
-                  <div class="material-mockup__top"><span class="material-mark">AI</span><span>课后学习资料</span></div>
-                  <h3>课堂摘要</h3>
+                  <div class="material-mockup__top">
+                    <span class="material-mark">{{ teacher ? 'AI' : '学' }}</span>
+                    <span>{{ teacher ? 'AI 备课中心' : '视频学习助手' }}</span>
+                  </div>
+                  <h3>{{ teacher ? '教学目标' : '视频字幕' }}</h3>
                   <div class="material-line material-line--long"></div>
                   <div class="material-line"></div>
-                  <h3>重点与术语</h3>
+                  <h3>{{ teacher ? '重点与练习' : '学习笔记' }}</h3>
                   <div class="material-line material-line--long"></div>
                   <div class="material-line material-line--short"></div>
-                  <div class="material-tags"><span>摘要</span><span>术语</span><span>测验</span></div>
+                  <div class="material-tags">
+                    <template v-if="teacher"><span>目标</span><span>重点</span><span>练习</span></template>
+                    <template v-else><span>字幕</span><span>笔记</span><span>回看</span></template>
+                  </div>
                 </div>
               </div>
             </article>
@@ -91,7 +94,7 @@
         </div>
       </section>
     </main>
-    <SignAvatarWidget initial-text="你好，欢迎使用听障学习平台" sign-text="你好，欢迎使用，听障学习平台" />
+
   </div>
 </template>
 
@@ -100,10 +103,11 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight, Document, Folder, MagicStick, Microphone, Monitor, VideoCamera } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
-import SignAvatarWidget from '../components/SignAvatarWidget.vue'
+
 import { session } from '../auth/session.js'
 
 const router = useRouter()
+
 const role = computed(() => session.user?.role)
 const displayName = computed(() => session.user?.name || session.user?.username || '同学')
 const roleLabel = computed(() => role.value === 'TEACHER' ? '教师端' : '学生端')
@@ -131,15 +135,24 @@ const slides = computed(() => {
       action: teacher ? '/teacher/classrooms' : '/student/join',
       actionLabel: teacher ? '进入课堂列表' : '输入房间码'
     },
-    {
-      key: 'materials',
-      theme: 'materials',
-      eyebrow: 'AI 学习支持 · 课后可复习',
-      title: '把课堂，\n沉淀成资料',
-      description: '课堂结束后，学生可以自行生成摘要、重点、术语和测验，也能从视频中整理学习笔记。',
-      points: ['AI 摘要', '术语与测验', '视频笔记'],
-      action: teacher ? '/teacher/prepare-center' : '/student/videos',
-      actionLabel: teacher ? '进入备课中心' : '开始视频学习'
+    teacher ? {
+      key: 'teacher-prepare',
+      theme: 'support',
+      eyebrow: 'AI 备课中心 · 高效教学',
+      title: '把备课，\n交给智能助手',
+      description: '从 PPT 自动提炼教学重点，生成备课资料与课堂内容，让教师把更多时间留给学生。',
+      points: ['AI 备课资料', '教学重点', '练习设计'],
+      action: '/teacher/prepare-center',
+      actionLabel: '进入备课中心'
+    } : {
+      key: 'student-videos',
+      theme: 'support',
+      eyebrow: '视频学习 · 随时复习',
+      title: '把视频，\n变成学习资料',
+      description: '上传学习视频，生成带时间轴的字幕与结构化笔记，让每一次复习都有清晰依据。',
+      points: ['视频字幕', '学习笔记', '随时回看'],
+      action: '/student/videos',
+      actionLabel: '开始视频学习'
     }
   ]
 })
@@ -155,17 +168,41 @@ const shortcuts = computed(() => role.value === 'TEACHER' ? [
 function navigate(path) {
   router.push(path)
 }
+
+
 </script>
 
 <style scoped>
-.home-page { padding-bottom: 34px; }
+.home-page { min-height: 0; height: auto; padding-bottom: 34px; overflow: visible; }
 .home-welcome {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 16px;
+  padding: clamp(18px, 2.2vw, 28px);
+  overflow: hidden;
+  border: 1px solid rgba(11, 110, 153, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(37, 161, 142, 0.13), transparent 24rem),
+    radial-gradient(circle at 100% 0%, rgba(240, 180, 41, 0.12), transparent 20rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(228, 245, 246, 0.76));
+  box-shadow: 0 12px 32px rgba(16, 42, 67, 0.08);
 }
+.home-welcome::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -90px;
+  top: -130px;
+  border: 1px solid rgba(11, 110, 153, 0.12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.home-welcome > * { position: relative; z-index: 1; }
 .home-role {
   display: inline-flex;
   padding: 5px 10px;
@@ -178,18 +215,7 @@ function navigate(path) {
 }
 .home-welcome h1 { margin: 8px 0 0; font-size: clamp(26px, 3vw, 38px); letter-spacing: -0.045em; }
 .home-welcome p { margin: 8px 0 0; color: var(--ink-soft); line-height: 1.7; }
-.home-welcome-note {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 10px 14px;
-  border: 1px solid #cde3ec;
-  border-radius: 999px;
-  color: var(--primary-strong);
-  background: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
-  white-space: nowrap;
-}
+
 .welcome-note-dot, .live-dot {
   width: 8px;
   height: 8px;
@@ -209,7 +235,7 @@ function navigate(path) {
   grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
   align-items: center;
   gap: clamp(25px, 5vw, 75px);
-  padding: clamp(28px, 5vw, 68px);
+  padding: clamp(16px, 2.6vw, 32px);
   overflow: hidden;
   color: #fff;
 }
@@ -224,7 +250,7 @@ function navigate(path) {
 .hero-slide::after { width: 250px; height: 250px; left: 38%; bottom: -170px; }
 .hero-slide--captions { background: linear-gradient(135deg, #071e32 0%, #0b5b7c 57%, #1b8f86 100%); }
 .hero-slide--sync { background: linear-gradient(135deg, #102a43 0%, #24506b 52%, #257c78 100%); }
-.hero-slide--materials { background: linear-gradient(135deg, #231b13 0%, #744e12 52%, #d9941a 100%); }
+.hero-slide--support { background: linear-gradient(135deg, #0a304b 0%, #126f80 54%, #2a9a83 100%); }
 .hero-copy { position: relative; z-index: 1; }
 .hero-eyebrow {
   display: inline-flex;
@@ -237,49 +263,49 @@ function navigate(path) {
   letter-spacing: 0.06em;
 }
 .hero-copy h2 {
-  margin: 18px 0 12px;
-  font-size: clamp(36px, 4vw, 60px);
+  margin: 9px 0 7px;
+  font-size: clamp(24px, 2.5vw, 34px);
   line-height: 1.1;
   letter-spacing: -0.06em;
   white-space: pre-line;
 }
-.hero-copy p { max-width: 620px; margin: 0; color: rgba(255,255,255,0.82); font-size: clamp(15px, 1.5vw, 19px); line-height: 1.8; }
-.hero-points { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
-.hero-points span { padding: 6px 11px; border-radius: 999px; background: rgba(255,255,255,0.12); font-size: 13px; }
-.hero-action { margin-top: 24px; border: 0; background: #fff !important; color: #0b4763 !important; font-weight: 800; }
+.hero-copy p { max-width: 620px; margin: 0; color: rgba(255,255,255,0.82); font-size: clamp(13px, 1.1vw, 15px); line-height: 1.5; }
+.hero-points { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.hero-points span { padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.12); font-size: 11px; }
+.hero-action { margin-top: 10px; border: 0; background: #fff !important; color: #0b4763 !important; font-weight: 800; }
 .hero-action:hover { background: #e8f7fb !important; }
 .hero-action .el-icon { margin-left: 6px; }
 .hero-visual { position: relative; z-index: 1; display: flex; justify-content: center; }
 .caption-mockup, .material-mockup, .slide-mockup {
-  width: min(100%, 430px);
+  width: min(100%, 320px);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 20px;
   box-shadow: 0 24px 50px rgba(0,0,0,0.22);
 }
-.caption-mockup { padding: 22px; background: rgba(2, 15, 27, 0.52); backdrop-filter: blur(12px); }
+.caption-mockup { padding: 13px; background: rgba(2, 15, 27, 0.52); backdrop-filter: blur(12px); }
 .mockup-top, .material-mockup__top, .slide-mockup__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; }
 .mockup-top { justify-content: flex-start; color: #9be5d4; font-weight: 800; }
-.caption-mockup p { margin: 28px 0 24px; font-size: clamp(21px, 2.1vw, 29px); line-height: 1.55; font-weight: 800; }
-.wave-row { display: flex; align-items: center; gap: 6px; height: 62px; }
+.caption-mockup p { margin: 12px 0 10px; font-size: clamp(16px, 1.5vw, 20px); line-height: 1.4; font-weight: 800; }
+.wave-row { display: flex; align-items: center; gap: 5px; height: 34px; }
 .wave-row span { width: 7px; border-radius: 999px; background: #7de0ce; animation: wave 1.2s ease-in-out infinite alternate; }
 @keyframes wave { from { transform: scaleY(0.45); opacity: 0.65; } to { transform: scaleY(1); opacity: 1; } }
 .slide-mockup { overflow: hidden; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
-.slide-mockup__top { padding: 15px 18px; color: #bde9e2; border-bottom: 1px solid rgba(255,255,255,0.14); }
-.slide-mockup__canvas { margin: 18px; padding: 28px 24px; min-height: 230px; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(145deg, #f7fbfc, #dceef1); color: #163c4d; }
+.slide-mockup__top { padding: 10px 13px; color: #bde9e2; border-bottom: 1px solid rgba(255,255,255,0.14); }
+.slide-mockup__canvas { margin: 12px; padding: 16px; min-height: 155px; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(145deg, #f7fbfc, #dceef1); color: #163c4d; }
 .slide-kicker { color: #0b7b75; font-size: 11px; font-weight: 900; letter-spacing: 0.16em; }
-.slide-mockup__canvas strong { margin-top: 12px; font-size: 27px; line-height: 1.25; letter-spacing: -0.04em; }
-.slide-mockup__line { width: 45%; height: 6px; margin-top: 22px; border-radius: 99px; background: #84b9c0; }
+.slide-mockup__canvas strong { margin-top: 7px; font-size: 21px; line-height: 1.2; letter-spacing: -0.04em; }
+.slide-mockup__line { width: 45%; height: 5px; margin-top: 13px; border-radius: 99px; background: #84b9c0; }
 .slide-mockup__footer { display: flex; justify-content: center; gap: 7px; padding: 0 18px 18px; }
 .slide-mockup__footer span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.35); }
 .slide-mockup__footer span.active { width: 20px; border-radius: 99px; background: #8de1d1; }
-.material-mockup { padding: 24px; background: rgba(255, 250, 240, 0.96); color: #352917; }
-.material-mockup__top { color: #8a5a00; font-weight: 800; }
+.material-mockup { padding: 16px; background: rgba(2, 15, 27, 0.5); color: #ffffff; backdrop-filter: blur(12px); }
+.material-mockup__top { color: #9be5d4; font-weight: 800; }
 .material-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: #f0b429; color: #fff; font-size: 11px; }
-.material-mockup h3 { margin: 24px 0 10px; font-size: 18px; }
-.material-line { height: 8px; margin-top: 9px; border-radius: 99px; background: #e4d6bf; }
+.material-mockup h3 { margin: 14px 0 7px; font-size: 16px; color: #ffffff; }
+.material-line { height: 6px; margin-top: 7px; border-radius: 99px; background: rgba(255,255,255,0.2); }
 .material-line--long { width: 90%; }.material-line--short { width: 62%; }
-.material-tags { display: flex; gap: 7px; margin-top: 22px; }
-.material-tags span { padding: 5px 9px; border-radius: 6px; background: #f5e6b7; color: #7a5200; font-size: 11px; font-weight: 700; }
+.material-tags { display: flex; gap: 6px; margin-top: 13px; }
+.material-tags span { padding: 5px 9px; border-radius: 999px; background: rgba(240,180,41,0.18); color: #ffe6a6; font-size: 11px; font-weight: 700; }
 .home-shortcuts { margin-top: 24px; }
 .home-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
 .section-kicker { color: var(--primary); font-size: 12px; font-weight: 900; letter-spacing: 0.14em; }
@@ -294,14 +320,15 @@ function navigate(path) {
   padding: 18px 20px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.07);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(245, 251, 250, 0.95));
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-soft);
   color: var(--ink);
   text-align: left;
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
-.shortcut-card:hover { transform: translateY(-4px); border-color: #8ac4d6; box-shadow: 0 16px 34px rgba(16, 42, 67, 0.13); }
+.shortcut-card:hover { transform: translateY(-3px); border-color: #8ac4d6; box-shadow: var(--shadow-raised); }
 .shortcut-icon { flex: 0 0 58px; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 16px; font-size: 27px; }
 .shortcut-card--blue .shortcut-icon { background: #e4f3f8; color: #0b6e99; }
 .shortcut-card--teal .shortcut-icon { background: #e2f5ef; color: #1f8a70; }
@@ -314,19 +341,19 @@ function navigate(path) {
 .shortcut-copy small { color: var(--ink-soft); font-size: 13px; line-height: 1.55; }
 .shortcut-arrow { margin-left: auto; color: #8aa2b2; font-size: 19px; }
 @media (max-width: 900px) {
-  .home-welcome { align-items: flex-start; flex-direction: column; }
-  .home-welcome-note { white-space: normal; }
-  .hero-slide { grid-template-columns: 1fr; padding: 30px; }
-  .hero-copy h2 { font-size: 42px; }
+  .home-welcome { align-items: stretch; flex-direction: column; }
+  .hero-slide { grid-template-columns: 1fr; padding: 18px 24px; }
+  .hero-copy h2 { font-size: 30px; }
   .hero-visual { display: none; }
   .home-section-heading { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 560px) {
   .home-page { padding-bottom: 20px; }
   .home-hero :deep(.el-carousel__arrow) { display: none; }
-  .hero-slide { padding: 24px; }
-  .hero-copy h2 { font-size: 34px; }
-  .hero-copy p { font-size: 15px; }
+  .hero-slide { padding: 16px 18px; }
+  .hero-copy h2 { margin-top: 7px; font-size: 26px; }
+  .hero-copy p { font-size: 13px; line-height: 1.45; }
+  .hero-points { display: none; }
   .shortcut-card { min-height: 118px; }
   .shortcut-grid { grid-template-columns: 1fr; }
 }

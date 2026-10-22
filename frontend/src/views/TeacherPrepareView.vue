@@ -4,13 +4,14 @@
       <el-button @click="router.push('/teacher/lessons')">返回课程</el-button>
     </AppHeader>
 
-    <main class="page-shell" v-loading="loading">
+    <main class="page-shell prepare-page" v-loading="loading">
       <div class="page-title-row">
         <div>
           <h1 class="page-title">{{ lesson?.title || '课程备课' }}</h1>
           <p class="page-subtitle">预览转换后的 PDF，并根据 PPT 文字生成备课资料。</p>
         </div>
         <div class="actions-row">
+
           <el-button type="primary" :loading="generating" :disabled="!lesson" @click="generate">
             {{ material ? '重新生成备课资料' : '生成备课资料' }}
           </el-button>
@@ -18,7 +19,7 @@
       </div>
 
       <div class="classroom-grid">
-        <section class="panel">
+        <section class="panel prepare-preview-panel">
           <div class="panel-heading">
             <div>
               <h2>幻灯片预览</h2>
@@ -34,7 +35,7 @@
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel prepare-material-panel">
           <MarkdownPanel
             title="AI 备课资料"
             :content="material?.content"
@@ -44,7 +45,7 @@
         </section>
       </div>
     </main>
-    <SignAvatarWidget initial-text="你好，欢迎使用听障学习平台" sign-text="你好，欢迎使用，听障学习平台" />
+
   </div>
 </template>
 
@@ -55,7 +56,7 @@ import { ElMessage } from 'element-plus'
 import AppHeader from '../components/AppHeader.vue'
 import PdfStage from '../components/PdfStage.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
-import SignAvatarWidget from '../components/SignAvatarWidget.vue'
+
 import http from '../api/http.js'
 
 const route = useRoute()
@@ -65,6 +66,7 @@ const generating = ref(false)
 const lesson = ref(null)
 const material = ref(null)
 const page = ref(1)
+
 
 async function load() {
   loading.value = true
@@ -92,5 +94,42 @@ async function generate() {
   }
 }
 
+
 onMounted(load)
 </script>
+<style scoped>
+@media (min-width: 1121px) {
+  .prepare-page {
+    height: calc(100vh - 96px);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .prepare-page .page-title-row { flex-shrink: 0; margin-bottom: 12px; }
+  .prepare-page .classroom-grid {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .prepare-preview-panel {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .prepare-preview-panel .panel-heading,
+  .prepare-preview-panel .actions-row { flex-shrink: 0; }
+  .prepare-preview-panel :deep(.pdf-stage) {
+    flex: 1;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  .prepare-material-panel {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+</style>

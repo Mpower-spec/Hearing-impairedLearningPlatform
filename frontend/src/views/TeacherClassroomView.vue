@@ -229,9 +229,9 @@ function addDanmaku(item) {
 }
 
 function send(payload) {
-  if (socket?.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(payload))
-  }
+  if (socket?.readyState !== WebSocket.OPEN) return false
+  socket.send(JSON.stringify(payload))
+  return true
 }
 
 function go(delta) {

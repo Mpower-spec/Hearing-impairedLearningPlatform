@@ -11,7 +11,9 @@
           <h1 class="page-title">视频学习</h1>
           <p class="page-subtitle">上传 MP4/WebM，生成带估算时间轴的字幕和结构化学习笔记。</p>
         </div>
+
       </div>
+
 
       <section class="panel">
         <div class="panel-heading">
@@ -44,14 +46,18 @@
               {{ selected.transcriptSource === 'MOCK' ? '模拟字幕' : 'AI 字幕' }}
             </el-tag>
           </div>
-          <video v-if="selected" :key="`${selected.id}-${selected.vttUrl || 'no-vtt'}`"
-                 class="video-player" :src="selected.videoUrl" controls preload="metadata">
+          <video ref="videoRef" v-if="selected" :key="`${selected.id}-${selected.vttUrl || 'no-vtt'}`"
+                 class="video-player" :src="selected.videoUrl" controls preload="metadata"
+                 @play="handleVideoPlay" @pause="handleVideoPause" @timeupdate="syncAvatarCue"
+                 @seeking="handleVideoSeeking" @ended="handleVideoEnded">
             <track v-if="selected.vttUrl" :src="selected.vttUrl" kind="captions" srclang="zh" label="中文字幕" default />
           </video>
           <el-empty v-else description="上传或选择一个视频" />
           <p v-if="selected?.timingMode === 'ESTIMATED'" class="warning-text">
             当前字幕时间轴根据文本长度和视频时长估算，并非逐词精确时间戳。
           </p>
+          <p class="muted sign-avatar-sync-note">视频播放后，数字人会根据当前字幕同步表达手语。</p>
+
           <div class="actions-row" style="margin-top: 16px">
             <el-button type="primary" :loading="transcribing" :disabled="!selected" @click="transcribe">
               {{ selected?.transcript ? '重新生成字幕' : '生成字幕' }}
@@ -100,16 +106,21 @@
                        empty-text="生成字幕后，可继续生成结构化学习笔记。" />
       </section>
     </main>
+
+
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppHeader from '../components/AppHeader.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
+
 import http from '../api/http.js'
+import { clearSignCaptions, pushSignCaption } from '../avatar/avatarStore.js'
+import { findCueIndex, parseVtt } from '../utils/vtt.js'
 
 const router = useRouter()
 const videos = ref([])
@@ -122,6 +133,10 @@ const deleting = ref(false)
 const uploadTitle = ref('')
 const uploadFile = ref(null)
 const uploadRef = ref(null)
+const videoRef = ref(null)
+const captionCues = ref([])
+const lastCueIndex = ref(-1)
+let cueLoadId = 0
 
 function formatTime(value) {
   if (!value) return '-'
@@ -233,5 +248,62 @@ async function deleteVideo() {
   }
 }
 
+async function loadCaptionCues() {
+  const loadId = ++cueLoadId
+  captionCues.value = []
+  lastCueIndex.value = -1
+  clearSignCaptions()
+  const url = selected.value?.vttUrl
+  if (!url) return
+  try {
+    const response = await fetch(url, { cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const cues = parseVtt(await response.text())
+    if (loadId !== cueLoadId) return
+    captionCues.value = cues
+    if (videoRef.value && !videoRef.value.paused && !videoRef.value.ended) syncAvatarCue()
+  } catch (error) {
+    if (loadId === cueLoadId) {
+      console.warn('视频手语字幕时间轴加载失败，视频字幕仍可正常播放', error)
+    }
+  }
+}
+
+function syncAvatarCue() {
+  const player = videoRef.value
+  if (!player || player.paused || player.ended) return
+  const index = findCueIndex(captionCues.value, player.currentTime)
+  if (index < 0 || index === lastCueIndex.value) return
+  lastCueIndex.value = index
+  pushSignCaption(captionCues.value[index].text, `video-${selected.value?.id}-${index}`)
+}
+
+function handleVideoPlay() {
+  lastCueIndex.value = -1
+  syncAvatarCue()
+}
+
+function handleVideoPause() {
+  lastCueIndex.value = -1
+  clearSignCaptions()
+}
+
+function handleVideoSeeking() {
+  lastCueIndex.value = -1
+  clearSignCaptions()
+  if (videoRef.value && !videoRef.value.paused && !videoRef.value.ended) syncAvatarCue()
+}
+
+function handleVideoEnded() {
+  lastCueIndex.value = -1
+  clearSignCaptions()
+}
+
+watch([() => selected.value?.id, () => selected.value?.vttUrl], loadCaptionCues, { flush: 'post' })
 onMounted(load)
+onBeforeUnmount(() => clearSignCaptions())
 </script>
+
+<style scoped>
+.sign-avatar-sync-note { margin: 7px 0 0; font-size: 13px; }
+</style>
