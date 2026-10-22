@@ -62,6 +62,7 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
         String token = UriComponentsBuilder.fromUri(session.getUri()).build()
                 .getQueryParams().getFirst("token");
         if (token == null || token.isBlank()) {
+            log.warn("WebSocket authentication rejected: sessionId={}, reason=missing token", session.getId());
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Missing token"));
             return;
         }
@@ -69,8 +70,12 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
             // 解析令牌，成功则把用户挂到会话属性上
             AuthUser user = jwtService.parseToken(token);
             session.getAttributes().put(AUTH_ATTRIBUTE, user);
+            log.info("WebSocket authenticated: sessionId={}, userId={}, role={}",
+                    session.getId(), user.id(), user.role());
         } catch (BusinessException ex) {
             // 令牌无效：拒绝连接
+            log.warn("WebSocket authentication rejected: sessionId={}, reason={}",
+                    session.getId(), ex.getMessage());
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token"));
         }
     }
@@ -115,7 +120,7 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
             sendError(session, ex.getMessage());
         } catch (Exception ex) {
             // 其他异常：记录日志并回传通用错误
-            log.warn("WebSocket message failed", ex);
+            log.warn("WebSocket message failed: sessionId={}", session.getId(), ex);
             sendError(session, "消息处理失败");
         }
     }
@@ -133,6 +138,8 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
         Room room = roomService.joinByCode(roomCode, user);
         // 将会话登记为该房间的参与者
         participants.put(session.getId(), new Participant(session, user, room.getId(), roomCode));
+        log.info("WebSocket room joined: sessionId={}, userId={}, roomId={}",
+                session.getId(), user.id(), room.getId());
         // 组装课堂状态并回传给刚加入的客户端
         RoomDto dto = roomService.getForUser(room.getId(), user);
         Map<String, Object> state = new LinkedHashMap<>();
@@ -195,6 +202,8 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
     private void handleEnd(Participant participant) {
         requireTeacher(participant);
         roomService.end(participant.roomId(), participant.user());
+        log.info("WebSocket room ended: sessionId={}, userId={}, roomId={}",
+                participant.session().getId(), participant.user().id(), participant.roomId());
         broadcast(participant.roomId(), Map.of("type", "end"));
     }
 
@@ -234,7 +243,7 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
                 }
             }
         } catch (Exception ex) {
-            log.debug("WebSocket send failed", ex);
+            log.debug("WebSocket send failed: sessionId={}", session.getId(), ex);
         }
     }
 
@@ -244,6 +253,7 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         participants.remove(session.getId());
+        log.debug("WebSocket connection closed: sessionId={}, status={}", session.getId(), status);
     }
 
     /**
@@ -252,6 +262,7 @@ public class ClassroomWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) {
         participants.remove(session.getId());
+        log.warn("WebSocket transport error: sessionId={}", session.getId(), exception);
         closeQuietly(session, CloseStatus.SERVER_ERROR);
     }
 

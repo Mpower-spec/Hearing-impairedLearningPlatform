@@ -1,6 +1,7 @@
 package com.hearing.platform.security;
 
 import com.hearing.platform.common.BusinessException; // 业务异常（携带 HTTP 状态）
+import com.hearing.platform.logging.LoggingContext;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -48,6 +49,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         AuthUser user = jwtService.parseToken(header.substring(7).trim());
         // 将当前用户放入线程上下文，供控制器/服务层读取
         AuthContext.set(user);
+        LoggingContext.setUser(user.id(), user.role());
 
         // 仅当目标为控制器方法时才做角色校验
         if (handler instanceof HandlerMethod method) {

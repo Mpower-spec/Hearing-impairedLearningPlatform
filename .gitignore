@@ -32,3 +32,4 @@ backend/.libreoffice-profile/
 
 # Local runtime tools (LibreOffice, FFmpeg, test artifacts)
 tools/
+backend/logs/

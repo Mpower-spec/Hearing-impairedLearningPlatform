@@ -49,5 +49,12 @@ server:
   port: ${SERVER_PORT:8080}
 
 logging:
+  file:
+    path: ${LOG_PATH:./logs}
+  charset:
+    console: UTF-8
+    file: UTF-8
   level:
+    root: INFO
     com.hearing.platform: INFO
+    com.hearing.platform.access: INFO

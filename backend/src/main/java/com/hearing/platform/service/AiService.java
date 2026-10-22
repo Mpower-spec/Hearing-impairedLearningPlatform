@@ -95,6 +95,8 @@ public class AiService {
         }
         // 调用 LLM 生成备课内容（失败时按策略回退 mock）
         AiResult result = runLlm(
+                "PREPARE",
+                lessonId,
                 PromptTemplates.prepare(lesson.getTitle(), lesson.getPptText()),
                 () -> MockContent.prepare(lesson.getTitle())
         );
@@ -133,6 +135,8 @@ public class AiService {
         String captionText = captions.stream().map(Caption::getContent).collect(Collectors.joining("\n"));
         // 基于 PPT 与字幕文本调用 LLM 生成学习资料
         AiResult result = runLlm(
+                "CLASS_MATERIAL",
+                lessonId,
                 PromptTemplates.classMaterial(lesson.getTitle(), lesson.getPptText(), captionText),
                 () -> MockContent.classMaterial(lesson.getTitle())
         );
@@ -176,7 +180,7 @@ public class AiService {
             }
 
             // ASR 转写音频为文本，并根据时长生成估算 VTT 字幕
-            AiResult result = runAsr(audioPath, MockContent::transcript);
+            AiResult result = runAsr("VIDEO_TRANSCRIBE", videoId, audioPath, MockContent::transcript);
             String vtt = vttService.createEstimatedVtt(result.content(), duration);
             String vttRelative = storageService.writeText("vtt", vtt);
             // 回写音频、字幕、转写文本及相关字段
@@ -196,7 +200,7 @@ public class AiService {
                 throw ex;
             }
             // 允许回退：使用 mock 字幕保证流程可用
-            log.warn("ASR failed, generating mock transcript", ex);
+            log.warn("ASR failed, generating mock transcript: videoId={}", videoId, ex);
             AiResult fallback = new AiResult(MockContent.transcript(), "MOCK");
             String vtt = vttService.createEstimatedVtt(fallback.content(), duration);
             String vttRelative = storageService.writeText("vtt", vtt);
@@ -228,6 +232,8 @@ public class AiService {
         }
         // 基于视频字幕调用 LLM 生成学习笔记
         AiResult result = runLlm(
+                "VIDEO_NOTE",
+                videoId,
                 PromptTemplates.videoNote(video.getTitle(), video.getTranscript()),
                 () -> MockContent.videoNote(video.getTitle())
         );
@@ -244,11 +250,13 @@ public class AiService {
      * mode=mock 直接返回模拟内容；mode=real 严格调用 LLM（失败则抛出）；
      * mode=auto 优先调用 LLM，失败且允许回退时返回模拟内容。
      *
+     * @param operation     业务操作类型，用于日志定位
+     * @param resourceId    关联的课程或视频 ID
      * @param prompt        发送给 LLM 的提示词
      * @param mockSupplier  模拟内容的提供者（回退时使用）
      * @return 包含内容与来源标记（AI/MOCK）的结果
      */
-    private AiResult runLlm(String prompt, Supplier<String> mockSupplier) {
+    private AiResult runLlm(String operation, Long resourceId, String prompt, Supplier<String> mockSupplier) {
         String mode = mode();
         // mock 模式：不实际调用，直接返回模拟内容
         if ("mock".equals(mode)) {
@@ -260,7 +268,7 @@ public class AiService {
         } catch (RuntimeException ex) {
             // auto 模式且允许回退时，降级为模拟内容
             if ("auto".equals(mode) && properties.isFallbackEnabled()) {
-                log.warn("LLM failed, using mock fallback", ex);
+                log.warn("LLM failed, using mock fallback: operation={}, resourceId={}", operation, resourceId, ex);
                 return new AiResult(mockSupplier.get(), "MOCK");
             }
             throw ex;
@@ -271,11 +279,13 @@ public class AiService {
      * 统一封装 ASR 调用与回退策略。
      * 回退逻辑与 {@link #runLlm} 一致：mock 直接返回，real 严格调用，auto 失败时降级。
      *
-     * @param audioFile    待转写的音频文件路径
-     * @param mockSupplier 模拟转写文本的提供者（回退时使用）
+     * @param operation     业务操作类型，用于日志定位
+     * @param resourceId    关联的视频 ID
+     * @param audioFile     待转写的音频文件路径
+     * @param mockSupplier  模拟转写文本的提供者（回退时使用）
      * @return 包含内容与来源标记（AI/MOCK）的结果
      */
-    private AiResult runAsr(Path audioFile, Supplier<String> mockSupplier) {
+    private AiResult runAsr(String operation, Long resourceId, Path audioFile, Supplier<String> mockSupplier) {
         String mode = mode();
         if ("mock".equals(mode)) {
             return new AiResult(mockSupplier.get(), "MOCK");
@@ -285,7 +295,7 @@ public class AiService {
             return new AiResult(asrClient.transcribe(audioFile), "AI");
         } catch (RuntimeException ex) {
             if ("auto".equals(mode) && properties.isFallbackEnabled()) {
-                log.warn("ASR failed, using mock fallback", ex);
+                log.warn("ASR failed, using mock fallback: operation={}, resourceId={}", operation, resourceId, ex);
                 return new AiResult(mockSupplier.get(), "MOCK");
             }
             throw ex;
