@@ -716,3 +716,85 @@ body { color: var(--ink); }
 }
 .markdown-body th { background: #edf7f7; }
 .markdown-body code { background: #e9f3f4; }
+/* Student-first mobile adaptation */
+@media (max-width: 767px) {
+  html, body { overflow-x: hidden; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .page-shell {
+    width: calc(100% - 16px);
+    min-height: 0;
+    margin: 10px auto calc(84px + env(safe-area-inset-bottom));
+    padding: 12px;
+    border-radius: 18px;
+  }
+  .page-title-row { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .page-title { font-size: clamp(24px, 8vw, 30px); }
+  .page-subtitle { margin-top: 5px; font-size: 13px; line-height: 1.55; }
+  .panel { padding: 15px; border-radius: 16px; }
+  .panel-heading { margin-bottom: 12px; }
+  .actions-row { align-items: stretch; gap: 8px; }
+  .el-button:not(.el-button--small) { min-height: 44px; }
+  .el-button--small { min-height: 34px; }
+  .el-input__inner, .el-textarea__inner { font-size: 16px; }
+  .el-dialog { width: 94vw !important; max-height: 90vh; margin: 5vh auto !important; }
+  .el-dialog__body { max-height: calc(90vh - 120px); overflow-y: auto; }
+  .el-message-box { width: 92vw; }
+  .el-drawer.btt { height: 92vh !important; }
+  .el-tag { max-width: 100%; white-space: normal; }
+  .home-welcome { padding: 16px; border-radius: 17px; }
+  .home-welcome h1 { font-size: 27px; }
+  .home-hero .el-carousel__container { height: 240px !important; }
+  .shortcut-grid { grid-template-columns: 1fr; }
+  .shortcut-card { min-height: 96px; padding: 14px; gap: 12px; }
+  .shortcut-icon { flex-basis: 46px; width: 46px; height: 46px; font-size: 22px; }
+  .join-card { width: 100%; margin: 0; }
+  .join-code-input .el-input__inner { font-size: 26px; letter-spacing: 0.18em; }
+  .join-preview { padding: 15px; }
+  .join-preview .el-button { width: 100%; }
+  .video-layout { grid-template-columns: 1fr; gap: 14px; }
+  .student-videos-page .video-upload-actions > .el-input { width: 100% !important; max-width: none !important; }
+  .student-videos-page .video-upload-actions > .el-button,
+  .student-videos-page .video-upload-actions .el-upload,
+  .student-videos-page .video-upload-actions .el-upload .el-button { width: 100%; }
+  .student-videos-page .actions-row > .el-button { flex: 1 1 140px; }
+  .student-videos-page .video-player { width: 100%; max-height: none; aspect-ratio: 16 / 9; object-fit: contain; }
+  .student-videos-page .video-list-item { min-height: 58px; }
+  .student-videos-page .transcript-box { max-height: 320px; }
+  .classroom-page,
+  .classroom-focus-page { height: auto !important; overflow: visible !important; }
+  .focus-topline { align-items: flex-start; flex-direction: column; gap: 10px; padding: 12px; border-radius: 15px; }
+  .focus-title-row { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .focus-title-row h1 { font-size: 23px; }
+  .focus-top-actions { width: 100%; justify-content: flex-start; }
+  .caption-focus { padding: 10px; border-radius: 15px; }
+  .caption-focus .caption-big { min-height: 92px; padding: 10px 12px; font-size: clamp(24px, 8vw, 32px); line-height: 1.35; }
+  .ppt-focus { gap: 0; }
+  .ppt-stage-focus { flex: none; width: 100%; min-height: 0 !important; height: auto; aspect-ratio: 16 / 9; }
+  .ppt-controlbar { align-items: stretch; gap: 8px; }
+  .ppt-controlbar > * { flex: 1 1 auto; }
+  .ppt-controlbar .page-nav { width: 100%; justify-content: space-between; }
+  .ppt-controlbar .el-button { flex: 1; }
+  .records-grid { grid-template-columns: 1fr; gap: 14px; }
+  .record-panel .caption-history, .record-panel .danmaku-list { max-height: 32vh; }
+  .community-banner { align-items: flex-start; flex-wrap: wrap; padding: 15px; }
+  .community-stats { width: 100%; margin: 10px 0 0 68px; flex-wrap: wrap; }
+  .community-toolbar { align-items: stretch; flex-direction: column; }
+  .community-toolbar > * { width: 100% !important; max-width: none !important; }
+  .community-post-card { padding: 14px; min-height: 120px; }
+  .community-post-card h2 { font-size: 18px; }
+  .post-card-footer { align-items: flex-start; flex-direction: column; }
+  .post-card-actions { width: 100%; justify-content: space-between; }
+  .comment-composer-footer { align-items: flex-start; flex-direction: column; }
+  .comment-composer-footer .el-button { width: 100%; }
+}
+@media (max-width: 767px) {
+  .join-card .actions-row { align-items: stretch; }
+  .join-card .actions-row .el-button { width: 100%; }
+  .el-table { font-size: 13px; }
+  .el-table__body-wrapper,
+  .el-table__header-wrapper { overflow-x: auto; }
+  .el-pagination { flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+  .el-tabs__nav-wrap { overflow-x: auto; }
+  .markdown-body { overflow-wrap: anywhere; }
+  .markdown-body table { display: block; overflow-x: auto; }
+}

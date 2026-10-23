@@ -101,7 +101,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, Document, Folder, MagicStick, Microphone, Monitor, VideoCamera } from '@element-plus/icons-vue'
+import { ArrowRight, ChatDotRound, Document, Folder, MagicStick, Microphone, Monitor, VideoCamera } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
 
 import { session } from '../auth/session.js'
@@ -160,10 +160,12 @@ const slides = computed(() => {
 const shortcuts = computed(() => role.value === 'TEACHER' ? [
   { title: '课程与课件', description: '上传 PPTX，管理课程与课件内容', path: '/teacher/lessons', icon: Folder, tone: 'blue', badge: '课程库' },
   { title: '实时课堂', description: '查看正在同步和历史课堂记录', path: '/teacher/classrooms', icon: VideoCamera, tone: 'teal', badge: 'LIVE' },
-  { title: '备课中心', description: '选择课程，生成教学目标与练习', path: '/teacher/prepare-center', icon: MagicStick, tone: 'amber', badge: 'AI' }
+  { title: '备课中心', description: '选择课程，生成教学目标与练习', path: '/teacher/prepare-center', icon: MagicStick, tone: 'amber', badge: 'AI' },
+  { title: '学习社区', description: '交流课程问题、教学方法与学习经验', path: '/community', icon: ChatDotRound, tone: 'blue', badge: '交流' }
 ] : [
   { title: '加入课堂', description: '输入房间码，进入同步课堂', path: '/student/join', icon: Monitor, tone: 'blue' },
-  { title: '视频学习', description: '上传视频，生成字幕与学习笔记', path: '/student/videos', icon: VideoCamera, tone: 'teal' }
+  { title: '视频学习', description: '上传视频，生成字幕与学习笔记', path: '/student/videos', icon: VideoCamera, tone: 'teal' },
+  { title: '学习社区', description: '提问、交流课程内容与学习经验', path: '/community', icon: ChatDotRound, tone: 'amber', badge: '交流' }
 ])
 function navigate(path) {
   router.push(path)
@@ -358,3 +360,11 @@ function navigate(path) {
   .shortcut-grid { grid-template-columns: 1fr; }
 }
 </style>
+@media (max-width: 767px) {
+  .home-welcome { padding: 15px; border-radius: 17px; }
+  .home-welcome h1 { font-size: 27px; }
+  .home-hero :deep(.el-carousel__container) { height: 240px !important; }
+  .shortcut-grid { grid-template-columns: 1fr; }
+  .shortcut-card { min-height: 96px; padding: 14px; gap: 12px; }
+  .shortcut-icon { flex-basis: 46px; width: 46px; height: 46px; font-size: 22px; }
+}

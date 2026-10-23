@@ -87,3 +87,25 @@ CREATE TABLE IF NOT EXISTS video (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_video_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS community_post (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    category VARCHAR(30) NOT NULL,
+    title VARCHAR(120) NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_community_post_user (user_id),
+    KEY idx_community_post_category (category),
+    KEY idx_community_post_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS community_comment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_community_comment_post (post_id),
+    KEY idx_community_comment_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

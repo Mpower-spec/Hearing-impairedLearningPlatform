@@ -18,6 +18,7 @@
         @toggle="toggleAvatar"
         @retry="retryAvatar"
       />
+      <el-button class="header-community-button" :class="{ 'is-active': route.path === '/community' }" @click="router.push('/community')">学习社区</el-button>
       <el-button v-if="route.path !== '/home'" class="header-home-button" @click="router.push('/home')">返回首页</el-button>
       <slot />
       <span class="user-chip">
@@ -68,6 +69,20 @@ function logout() {
   border: 1px solid rgba(11, 110, 153, 0.12);
   box-shadow: 0 4px 12px rgba(16, 42, 67, 0.06);
 }
+.header-community-button {
+  --el-button-bg-color: #eef8f6;
+  --el-button-border-color: #c7e1df;
+  --el-button-text-color: #176b67;
+  --el-button-hover-bg-color: #e1f4f1;
+  --el-button-hover-border-color: #9bcac5;
+  --el-button-hover-text-color: #0b5f5b;
+}
+.header-community-button.is-active {
+  --el-button-bg-color: #dff2ef;
+  --el-button-border-color: #83bfba;
+  --el-button-text-color: #0b5f5b;
+  font-weight: 800;
+}
 .header-home-button {
   --el-button-bg-color: #e7f4fa;
   --el-button-border-color: #c5e2ee;
@@ -98,3 +113,19 @@ function logout() {
   .header-actions :deep(.sign-avatar-controls) { width: 100%; }
 }
 </style>
+@media (max-width: 767px) {
+  .app-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .brand-mark { width: 38px; height: 38px; border-radius: 12px; font-size: 18px; }
+  .brand-title { font-size: 16px; }
+  .brand-subtitle { display: none; }
+  .header-actions { width: 100%; justify-content: flex-start; gap: 6px; }
+  .header-actions :deep(.sign-avatar-controls) { width: 100%; }
+  .app-header--student .header-actions > .el-button:not(.header-logout-button) { display: none; }
+  .user-chip { padding: 6px 10px; font-size: 12px; }
+  .header-logout-button { min-height: 38px !important; }
+}

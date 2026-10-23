@@ -5,6 +5,7 @@ const routes = [
   { path: '/', redirect: '/home' },
   { path: '/login', component: () => import('../views/LoginView.vue') },
   { path: '/home', component: () => import('../views/HomeView.vue') },
+  { path: '/community', component: () => import('../views/CommunityView.vue') },
   {
     path: '/teacher/lessons',
     component: () => import('../views/TeacherLessonsView.vue'),

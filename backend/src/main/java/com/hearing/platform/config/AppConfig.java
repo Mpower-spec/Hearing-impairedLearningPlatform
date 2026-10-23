@@ -1,5 +1,6 @@
 package com.hearing.platform.config;
 
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties; // 启用配置属性绑定
 import org.springframework.context.annotation.Bean; // 声明 Bean
 import org.springframework.context.annotation.Configuration; // 配置类标记

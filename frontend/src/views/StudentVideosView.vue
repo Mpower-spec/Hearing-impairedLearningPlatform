@@ -5,7 +5,7 @@
       <el-button @click="router.push('/student/videos')">视频学习</el-button>
     </AppHeader>
 
-    <main class="page-shell">
+    <main class="page-shell student-videos-page">
       <div class="page-title-row">
         <div>
           <h1 class="page-title">视频学习</h1>
@@ -22,7 +22,7 @@
             <p class="muted">最大 100MB，浏览器需直接支持该视频编码；不做转码。</p>
           </div>
         </div>
-        <div class="actions-row">
+        <div class="actions-row video-upload-actions">
           <el-input v-model="uploadTitle" placeholder="视频标题" maxlength="200" style="max-width: 320px" />
           <el-upload ref="uploadRef" :auto-upload="false" :limit="1" accept=".mp4,.webm" :on-change="onFileChange"
                      :on-remove="() => (uploadFile = null)">
