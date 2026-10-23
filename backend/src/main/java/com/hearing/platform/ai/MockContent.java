@@ -76,6 +76,10 @@ public final class MockContent {
                 """.formatted(lessonTitle);
     }
 
+    public static String courseQa(String question, String sourceExcerpt) {
+        return "当前为演示模拟回答。针对问题“" + question + "”，检索到的相关课程内容是："
+                + sourceExcerpt + " [S1]\n\n配置真实 AI 服务后可获得更完整的分析与解释。";
+    }
     // 视频学习笔记的模拟输出
     public static String videoNote(String title) {
         return """

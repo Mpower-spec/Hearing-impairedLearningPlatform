@@ -101,6 +101,17 @@ public class MaterialService {
      * @param user     当前用户
      * @return 课堂学习资料
      */
+    public MaterialDto findClassMaterialForQa(Long lessonId, AuthUser user) {
+        if (user.isTeacher()) {
+            lessonService.requireOwned(lessonId, user);
+        } else if (!roomService.isMemberOfLesson(lessonId, user.id())) {
+            throw BusinessException.forbidden("加入过该课堂的学生才能使用课程问答");
+        }
+        Material material = materialMapper.selectOne(new LambdaQueryWrapper<Material>()
+                .eq(Material::getLessonId, lessonId).eq(Material::getType, CLASS_MATERIAL));
+        return material == null ? null : MaterialDto.from(material);
+    }
+
     public MaterialDto getClassMaterial(Long lessonId, AuthUser user) {
         if (user.isTeacher()) {
             // 教师：校验课程归属

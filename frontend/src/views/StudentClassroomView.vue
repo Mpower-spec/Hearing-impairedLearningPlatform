@@ -15,6 +15,7 @@
           </div>
         </div>
         <div class="focus-top-actions">
+          <el-button type="primary" plain :disabled="!lessonId" @click="qaVisible = true">课程问答</el-button>
           <template v-if="status === 'ENDED' && lessonId">
             <el-button v-if="material" type="warning" @click="materialVisible = true">查看课堂资料</el-button>
             <el-button type="primary" :loading="generatingMaterial" @click="generateMaterial">
@@ -94,7 +95,86 @@
       </div>
     </el-drawer>
 
-    <el-dialog v-model="materialVisible" title="课堂学习资料" width="min(860px, 92vw)">
+
+    <el-drawer
+      v-model="qaVisible"
+      class="course-qa-drawer"
+      direction="rtl"
+      size="min(420px, 100%)"
+      :with-header="true"
+    >
+      <template #header>
+        <div class="qa-drawer-title">
+          <strong>课程 AI 问答</strong>
+          <span>{{ lessonTitle || '当前课堂' }}</span>
+        </div>
+      </template>
+
+      <div class="qa-drawer-content">
+        <div class="qa-context">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>回答依据：PPT 内容、当前课堂字幕和课堂学习资料</span>
+        </div>
+
+        <div class="qa-message-list" aria-live="polite">
+          <div v-if="!qaMessages.length" class="qa-empty">
+            <el-icon><ChatDotRound /></el-icon>
+            <strong>有问题，直接问</strong>
+            <p>例如：“这节课的重点是什么？”或“请解释刚才提到的概念。”</p>
+          </div>
+
+          <article
+            v-for="(message, index) in qaMessages"
+            :key="`${message.role}-${index}`"
+            class="qa-message"
+            :class="`qa-message--${message.role}`"
+          >
+            <div class="qa-bubble">{{ message.content }}</div>
+            <div v-if="message.role === 'assistant' && message.source" class="qa-answer-meta">
+              <el-tag size="small" :type="message.source === 'MOCK' ? 'warning' : (message.source === 'LOCAL' ? 'info' : 'success')">
+                {{ qaSourceLabel(message.source) }}
+              </el-tag>
+            </div>
+            <el-collapse v-if="message.sources?.length" class="qa-sources">
+              <el-collapse-item title="查看引用来源">
+                <div v-for="(source, sourceIndex) in message.sources" :key="sourceIndex" class="qa-source-item">
+                  <el-tag size="small" effect="plain">{{ source.type }}</el-tag>
+                  <strong>{{ source.label }}</strong>
+                  <p>{{ source.excerpt }}</p>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+          </article>
+
+          <div v-if="qaLoading" class="qa-loading">
+            <el-icon class="is-loading"><Loading /></el-icon>
+            正在检索课程资料并生成回答…
+          </div>
+        </div>
+
+        <div class="qa-composer">
+          <el-alert v-if="qaError" :title="qaError" type="error" :closable="false" show-icon />
+          <el-button v-if="qaRetryQuestion" text type="primary" @click="askQuestion(true)">重试上一个问题</el-button>
+          <el-input
+            v-model="qaInput"
+            type="textarea"
+            :rows="3"
+            maxlength="500"
+            show-word-limit
+            resize="none"
+            placeholder="输入课程问题，Enter 发送，Shift+Enter 换行"
+            @keydown.enter.exact.prevent="askQuestion()"
+          />
+          <div class="qa-composer-footer">
+            <span>回答仅基于当前课程资料</span>
+            <el-button type="primary" :loading="qaLoading" :disabled="!qaInput.trim() || !lessonId" @click="askQuestion()">
+              发送问题
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </el-drawer>+
++    <el-dialog v-model="materialVisible" title="课堂学习资料" width="min(860px, 92vw)">
       <MarkdownPanel title="课后资料" :content="material?.content" :source="material?.source" />
     </el-dialog>
   </div>
@@ -104,6 +184,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ChatDotRound, Loading } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
 import PdfStage from '../components/PdfStage.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
@@ -134,14 +215,54 @@ const recordsVisible = ref(false)
 const materialVisible = ref(false)
 const generatingMaterial = ref(false)
 const material = ref(null)
-
+const qaVisible = ref(false)
+const qaInput = ref('')
+const qaMessages = ref([])
+const qaLoading = ref(false)
+const qaError = ref('')
+const qaRetryQuestion = ref('')
 
 let socket = null
 let reconnectTimer = null
 let manuallyClosed = false
 let historyLoaded = false
 
-function formatTime(value) {
+
+async function askQuestion(retry = false) {
+  const question = retry ? qaRetryQuestion.value : qaInput.value.trim()
+  if (!question || !lessonId.value || qaLoading.value) return
+  if (!retry) {
+    qaMessages.value.push({ role: 'user', content: question })
+    qaInput.value = ''
+  }
+  qaLoading.value = true
+  qaError.value = ''
+  try {
+    const result = await http.post('/course-qa/ask', {
+      roomId: Number(roomId),
+      question
+    })
+    qaMessages.value.push({
+      role: 'assistant',
+      content: result.answer,
+      source: result.source,
+      sources: result.sources || []
+    })
+    qaRetryQuestion.value = ''
+  } catch {
+    qaError.value = '课程问答暂时失败，请重试。'
+    qaRetryQuestion.value = question
+  } finally {
+    qaLoading.value = false
+  }
+}
+
+function qaSourceLabel(source) {
+  if (source === 'MOCK') return '模拟回答'
+  if (source === 'LOCAL') return '本地检索'
+  return 'AI 回答'
+}+
++function formatTime(value) {
   if (!value) return ''
   return String(value).replace('T', ' ').slice(11, 19)
 }
@@ -325,3 +446,40 @@ onBeforeUnmount(() => {
   try { socket?.close() } catch { /* ignored */ }
 })
 </script>
+<style scoped>
+.qa-drawer-title strong, .qa-drawer-title span { display: block; }
+.qa-drawer-title strong { color: var(--ink); font-size: 17px; }
+.qa-drawer-title span { margin-top: 3px; color: var(--ink-soft); font-size: 12px; }
+.qa-drawer-content { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.qa-context { display: flex; align-items: flex-start; gap: 8px; margin: 12px 16px 0; padding: 10px 12px; border: 1px solid #cde3e7; border-radius: 12px; background: linear-gradient(135deg, #eef8f7, #f7fbf4); color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.qa-context .el-icon { flex: 0 0 auto; margin-top: 2px; color: var(--primary); }
+.qa-message-list { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; }
+.qa-empty { min-height: 180px; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--ink-soft); }
+.qa-empty .el-icon { margin-bottom: 10px; color: var(--primary); font-size: 34px; }
+.qa-empty p { max-width: 280px; margin: 7px 0 0; line-height: 1.6; }
+.qa-message { margin-bottom: 14px; }
+.qa-message--user { display: flex; justify-content: flex-end; }
+.qa-message--assistant { display: flex; align-items: flex-start; flex-direction: column; }
+.qa-bubble { max-width: 92%; padding: 10px 12px; border-radius: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.qa-message--user .qa-bubble { color: #fff; background: linear-gradient(135deg, #0b6e99, #198c86); border-bottom-right-radius: 4px; }
+.qa-message--assistant .qa-bubble { color: var(--ink); background: linear-gradient(145deg, #f5fafb, #e8f4f2); border: 1px solid #d2e5e9; border-bottom-left-radius: 4px; }
+.qa-answer-meta { margin-top: 5px; }
+.qa-sources { width: 100%; margin-top: 5px; }
+.qa-source-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.qa-source-item:last-child { border-bottom: 0; }
+.qa-source-item strong { margin-left: 6px; font-size: 12px; }
+.qa-source-item p { margin: 5px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
+.qa-loading { display: flex; align-items: center; gap: 7px; color: var(--primary-strong); font-size: 12px; }
+.qa-composer { flex-shrink: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(244, 251, 250, 0.96); }
+.qa-composer .el-alert { margin-bottom: 8px; }
+.qa-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.qa-composer-footer span { color: var(--ink-soft); font-size: 10px; }
+@media (max-width: 767px) {
+  .qa-drawer-content { height: calc(100vh - 58px); }
+  .qa-message-list { padding: 12px; }
+  .qa-context { margin: 8px 12px 0; }
+  .qa-composer { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+  .qa-composer-footer { align-items: stretch; flex-direction: column; }
+  .qa-composer-footer .el-button { width: 100%; }
+}
+</style>

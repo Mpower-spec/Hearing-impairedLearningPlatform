@@ -72,6 +72,21 @@ public final class PromptTemplates {
                 """.formatted(title, truncate(transcript, 24000));
     }
 
+    public static String courseQa(String lessonTitle, String question, String context) {
+        return """
+                请只根据下面的课程资料回答学生问题。
+                课程：%s
+                学生问题：%s
+                课程资料：
+                %s
+
+                要求：
+                1. 使用简洁清晰的中文，适合听障学生阅读。
+                2. 资料不足时明确说明，不要编造。
+                3. 引用资料时使用 [S1]、[S2] 标记。
+                4. 不要输出资料来源列表，系统会单独展示。
+                """.formatted(lessonTitle, truncate(question, 500), truncate(context, 6000));
+    }
     // 将过长文本截断到指定字符数，并附截断说明，避免超出模型上下文
     public static String truncate(String text, int maxChars) {
         String value = text == null ? "" : text.trim();
