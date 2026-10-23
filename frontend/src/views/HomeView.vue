@@ -13,7 +13,7 @@
       </section>
 
       <section class="home-hero" aria-label="平台功能介绍">
-        <el-carousel :interval="5200" height="clamp(240px, 27vh, 290px)" arrow="always" indicator-position="none">
+        <el-carousel :autoplay="!accessibilitySettings.reduceMotion" :interval="5200" height="clamp(240px, 27vh, 290px)" arrow="always" indicator-position="none">
           <el-carousel-item v-for="slide in slides" :key="slide.key">
             <article class="hero-slide" :class="`hero-slide--${slide.theme}`">
               <div class="hero-copy">
@@ -105,6 +105,7 @@ import { ArrowRight, ChatDotRound, Document, Folder, MagicStick, Microphone, Mon
 import AppHeader from '../components/AppHeader.vue'
 
 import { session } from '../auth/session.js'
+import { accessibilitySettings } from '../accessibility/settings.js'
 
 const router = useRouter()
 

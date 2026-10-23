@@ -18,6 +18,7 @@
         @toggle="toggleAvatar"
         @retry="retryAvatar"
       />
+      <AccessibilitySettings />
       <el-button class="header-community-button" :class="{ 'is-active': route.path === '/community' }" @click="router.push('/community')">学习社区</el-button>
       <el-button v-if="route.path !== '/home'" class="header-home-button" @click="router.push('/home')">返回首页</el-button>
       <slot />
@@ -34,6 +35,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { session, clearSession, homeForRole } from '../auth/session.js'
+import AccessibilitySettings from './AccessibilitySettings.vue'
 import SignAvatarControls from './SignAvatarControls.vue'
 import { avatarState, replayAvatar, retryAvatar, toggleAvatar } from '../avatar/avatarStore.js'
 

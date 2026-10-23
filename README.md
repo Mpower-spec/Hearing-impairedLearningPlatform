@@ -22,6 +22,7 @@
 - 手语数字人：学生端使用唯一全局数字人实例，课堂最终字幕和视频 VTT 字幕可驱动手语表达，支持重播、隐藏和拖动。
 - 课程 AI 问答：学生可在实时课堂内基于 PPT、课堂字幕和课堂学习资料提问，回答附带引用来源并支持 AI 模拟降级。
 - 移动端：学生手机浏览器提供首页、课堂、视频、社区底部导航，并适配竖屏课堂、全宽视频、表单和弹窗。
+- 无障碍阅读设置：支持字幕字号、字幕行距、高对比度、减少动画和明亮/深色主题，设置保存在浏览器本地。
 - 后端：Java 17（使用 JDK 21 编译）、Spring Boot 3.3、Spring WebSocket、MyBatis-Plus、MySQL 8
 - 前端：Vue 3、Vite、JavaScript、Element Plus、Axios、vue-pdf-embed
 - 数字人：`avatar.gbqr.net` 在线 SDK，浏览器 WebGL，单例全局挂载
@@ -30,6 +31,16 @@
   - LLM 默认：`Qwen/Qwen2.5-72B-Instruct`
   - ASR 默认：`FunAudioLLM/SenseVoiceSmall`
 
+## 无障碍阅读设置
+
+登录后点击页头“阅读设置”即可调整：
+
+- 字幕字号（28–64 px）与行距（1.2–2.0 倍），实时作用于课堂字幕、字幕记录、视频字幕和字幕预览。
+- 高对比度模式：强化字幕、卡片、弹窗、按钮和键盘焦点边框。
+- 减少动画：停止首页轮播自动播放，并关闭过渡与装饰动画。
+- 明亮/深色主题：通过 CSS 变量统一切换页面、字幕和卡片视觉。
+
+设置保存在 `localStorage` 的 `hp_accessibility_settings_v1` 键中，刷新或重新登录后自动恢复，不写入数据库。核心样式变量包括 `--caption-font-size`、`--caption-line-height`、`--reading-card-bg`、`--reading-card-border` 和 `--caption-card-bg`。
 ## 目录
 
 ```text
