@@ -13,7 +13,7 @@
       </section>
 
       <section class="home-hero" aria-label="平台功能介绍">
-        <el-carousel :interval="5200" height="clamp(240px, 27vh, 290px)" arrow="always" indicator-position="inside">
+        <el-carousel :interval="5200" height="clamp(240px, 27vh, 290px)" arrow="always" indicator-position="none">
           <el-carousel-item v-for="slide in slides" :key="slide.key">
             <article class="hero-slide" :class="`hero-slide--${slide.theme}`">
               <div class="hero-copy">
@@ -109,6 +109,7 @@ import { session } from '../auth/session.js'
 const router = useRouter()
 
 const role = computed(() => session.user?.role)
+const teacher = computed(() => role.value === 'TEACHER')
 const displayName = computed(() => session.user?.name || session.user?.username || '同学')
 const roleLabel = computed(() => role.value === 'TEACHER' ? '教师端' : '学生端')
 

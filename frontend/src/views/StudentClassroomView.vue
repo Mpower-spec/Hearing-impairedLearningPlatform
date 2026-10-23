@@ -173,8 +173,9 @@
           </div>
         </div>
       </div>
-    </el-drawer>+
-+    <el-dialog v-model="materialVisible" title="课堂学习资料" width="min(860px, 92vw)">
+    </el-drawer>
+
+    <el-dialog v-model="materialVisible" title="课堂学习资料" width="min(860px, 92vw)">
       <MarkdownPanel title="课后资料" :content="material?.content" :source="material?.source" />
     </el-dialog>
   </div>
@@ -261,8 +262,9 @@ function qaSourceLabel(source) {
   if (source === 'MOCK') return '模拟回答'
   if (source === 'LOCAL') return '本地检索'
   return 'AI 回答'
-}+
-+function formatTime(value) {
+}
+
+function formatTime(value) {
   if (!value) return ''
   return String(value).replace('T', ' ').slice(11, 19)
 }
