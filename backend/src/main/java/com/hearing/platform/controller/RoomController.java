@@ -4,6 +4,7 @@ import com.hearing.platform.common.ApiResponse;   // 统一响应封装体
 import com.hearing.platform.dto.CaptionDto;        // 字幕展示对象
 import com.hearing.platform.dto.CreateRoomRequest; // 创建课堂请求参数
 import com.hearing.platform.dto.DanmakuDto;        // 弹幕展示对象
+import com.hearing.platform.dto.JoinRoomRequest;    // 学生加入课堂请求
 import com.hearing.platform.dto.RoomDto;           // 课堂房间展示对象
 import com.hearing.platform.security.AuthContext;  // 当前登录用户上下文
 import com.hearing.platform.security.RequireRole;  // 角色访问控制注解
@@ -69,6 +70,23 @@ public class RoomController {
      * @param roomCode 6 位房间码
      * @return 课堂概要信息
      */
+    /**
+     * 查询当前学生加入过的课堂记录，包含进行中和已结束课堂。
+     */
+    @GetMapping("/joined")
+    @RequireRole(Roles.STUDENT)
+    public ApiResponse<List<RoomDto>> joined() {
+        return ApiResponse.ok(roomService.listForStudent(AuthContext.get()));
+    }
+
+    /**
+     * 学生通过房间码加入课堂并立即写入成员关系。
+     */
+    @PostMapping("/join")
+    @RequireRole(Roles.STUDENT)
+    public ApiResponse<RoomDto> join(@Valid @RequestBody JoinRoomRequest request) {
+        return ApiResponse.ok("已加入课堂", roomService.joinByCodeForStudent(request.roomCode(), AuthContext.get()));
+    }
     @GetMapping("/by-code/{roomCode}")
     public ApiResponse<RoomDto> byCode(@PathVariable String roomCode) {
         // 服务层校验房间码有效性及教师归属后返回预览

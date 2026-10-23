@@ -125,6 +125,35 @@ public class RoomService {
     }
 
     /**
+     * 查询学生加入过的全部课堂（包含进行中和已结束），用于加入页的课堂记录。
+     * 数据来源为 room_member，不依赖房间码或浏览器会话。
+     */
+    public List<RoomDto> listForStudent(AuthUser student) {
+        if (!student.isStudent()) {
+            throw BusinessException.forbidden("只有学生可以查看已加入课堂");
+        }
+        List<RoomMember> memberships = memberMapper.selectList(new LambdaQueryWrapper<RoomMember>()
+                .eq(RoomMember::getUserId, student.id())
+                .orderByDesc(RoomMember::getJoinedAt));
+        if (memberships.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> roomIds = memberships.stream().map(RoomMember::getRoomId).distinct().toList();
+        List<Room> rooms = roomMapper.selectList(new LambdaQueryWrapper<Room>()
+                .in(Room::getId, roomIds)
+                .orderByDesc(Room::getCreatedAt));
+        if (rooms.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> lessonIds = rooms.stream().map(Room::getLessonId).distinct().toList();
+        Map<Long, Lesson> lessonMap = lessonMapper.selectBatchIds(lessonIds).stream()
+                .collect(Collectors.toMap(Lesson::getId, Function.identity()));
+        return rooms.stream()
+                .filter(room -> lessonMap.containsKey(room.getLessonId()))
+                .map(room -> toDto(room, lessonMap.get(room.getLessonId())))
+                .toList();
+    }
+    /**
      * 获取房间详情并做访问校验：教师需为课程归属者，学生需为房间成员。
      */
     public RoomDto getForUser(Long roomId, AuthUser user) {
@@ -196,6 +225,19 @@ public class RoomService {
         return room;
     }
 
+    /**
+     * 学生加入课堂并返回完整的课堂信息。
+     * 该方法供 REST 加入接口调用，确保离开页面前已持久化成员关系。
+     */
+    @Transactional
+    public RoomDto joinByCodeForStudent(String roomCode, AuthUser student) {
+        if (!student.isStudent()) {
+            throw BusinessException.forbidden("只有学生可以通过房间码加入课堂");
+        }
+        Room room = joinByCode(roomCode, student);
+        Lesson lesson = requireLessonForRoom(room);
+        return toDto(room, lesson);
+    }
     /**
      * 获取房间并要求其处于 LIVE 状态，否则视为已结束。
      */
