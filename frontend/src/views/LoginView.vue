@@ -15,6 +15,20 @@
         <div class="hero-point">PPT 页码同步</div>
         <div class="hero-point">AI 课后学习资料</div>
       </div>
+
+      <div class="login-signal-board" aria-hidden="true">
+        <div class="login-signal-card login-signal-card--caption">
+          <div class="login-signal-card__top"><span class="signal-dot"></span><span>实时字幕通道</span><strong>LIVE</strong></div>
+          <p>今天我们来学习光合作用，植物需要阳光、水和二氧化碳。</p>
+          <div class="login-signal-wave"><span v-for="bar in 18" :key="bar" :style="{ '--bar': bar }"></span></div>
+        </div>
+        <div class="login-signal-card login-signal-card--ai">
+          <span class="login-signal-label">AI STUDY FLOW</span>
+          <strong>字幕 → 笔记 → 复习</strong>
+          <small>让每一次学习都有迹可循</small>
+        </div>
+        <div class="login-scan-line"></div>
+      </div>
     </section>
 
     <section class="login-panel-wrap">

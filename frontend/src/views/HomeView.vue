@@ -9,6 +9,13 @@
           <h1>你好，{{ displayName }}</h1>
           <p>字幕优先，让课堂内容更清晰；协作同步，让每一次学习都有迹可循。</p>
         </div>
+        <div class="home-signal" aria-hidden="true">
+          <div class="home-signal__label"><span class="signal-dot"></span> VOICE TO TEXT</div>
+          <div class="home-signal__wave">
+            <span v-for="bar in 18" :key="bar" :style="{ '--bar': bar }"></span>
+          </div>
+          <div class="home-signal__meta"><span>实时字幕通道</span><strong>ONLINE</strong></div>
+        </div>
 
       </section>
 
