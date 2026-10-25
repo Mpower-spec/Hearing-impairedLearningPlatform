@@ -1,80 +1,72 @@
 <template>
   <div>
-    <AppHeader>
-      <el-button @click="router.push('/teacher/lessons')">课程与课件</el-button>
-    </AppHeader>
+    <AppHeader />
 
-    <main class="page-shell classroom-list-page">
-      <div class="page-title-row">
-        <div>
-          <span class="page-kicker">LIVE CLASSROOM</span>
-          <h1 class="page-title">实时课堂</h1>
-          <p class="page-subtitle">查看进行中和历史课堂，进入课堂继续同步 PPT、字幕与弹幕。</p>
+    <main class="page-shell teacher-command-page">
+      <section class="command-hero">
+        <div class="command-hero-copy">
+          <span class="command-kicker"><span class="signal-dot"></span> LIVE CLASSROOM CONTROL</span>
+          <h1 class="page-title">课堂指挥台</h1>
+          <p class="page-subtitle">查看正在同步的课堂、房间码与历史记录，快速进入教学现场。</p>
+          <div class="command-hero-actions">
+            <el-button type="primary" size="large" @click="router.push('/teacher/lessons')">创建新课堂</el-button>
+            <el-button size="large" :loading="loading" @click="load">刷新状态</el-button>
+          </div>
         </div>
-        <div class="actions-row">
-          <el-button :loading="loading" @click="load">刷新</el-button>
-          <el-button type="primary" @click="router.push('/teacher/lessons')">
-            去课程列表开课
-          </el-button>
-        </div>
-      </div>
-
-      <section class="classroom-overview">
-        <div class="overview-card overview-card--live">
-          <span class="overview-label">进行中</span>
-          <strong>{{ liveRooms.length }}</strong>
-          <small>正在同步的课堂</small>
-        </div>
-        <div class="overview-card overview-card--ended">
-          <span class="overview-label">已结束</span>
-          <strong>{{ endedRooms.length }}</strong>
-          <small>可回看的课堂记录</small>
-        </div>
-        <div class="overview-note">
-          <el-icon><VideoCamera /></el-icon>
-          <div>
-            <strong>每次开课都会生成 6 位房间码</strong>
-            <span>学生输入房间码加入，课堂结束后仍会保留记录。</span>
+        <div class="command-metrics">
+          <div class="command-metric command-metric--live">
+            <span>LIVE NOW</span><strong>{{ liveRooms.length }}</strong><small>进行中</small>
+            <div class="command-signal"><i v-for="bar in 9" :key="bar" :style="{ '--bar': bar }"></i></div>
+          </div>
+          <div class="command-metric command-metric--ended">
+            <span>ARCHIVE</span><strong>{{ endedRooms.length }}</strong><small>已结束</small>
           </div>
         </div>
       </section>
 
-      <section class="panel room-list-panel">
-        <div class="list-toolbar">
-          <div class="filter-tabs" role="tablist" aria-label="课堂筛选">
-            <button v-for="tab in filters" :key="tab.value" :class="{ active: filter === tab.value }" @click="filter = tab.value">
-              {{ tab.label }}
-              <span>{{ countFor(tab.value) }}</span>
-            </button>
+      <section class="command-console">
+        <aside class="command-sidebar">
+          <span class="command-sidebar-label">SESSIONS</span>
+          <button v-for="tab in filters" :key="tab.value" class="command-filter" :class="{ active: filter === tab.value }" @click="filter = tab.value">
+            <span>{{ tab.label }}</span><strong>{{ countFor(tab.value) }}</strong>
+          </button>
+          <div class="command-tip">
+            <el-icon><VideoCamera /></el-icon>
+            <p>每次开课都会生成新的 6 位房间码，结束后仍保留课堂记录。</p>
           </div>
-          <span class="muted">共 {{ filteredRooms.length }} 个课堂</span>
-        </div>
+        </aside>
 
-        <div v-if="filteredRooms.length" class="room-card-grid">
-          <article v-for="room in filteredRooms" :key="room.id" class="room-card" :class="`room-card--${room.status.toLowerCase()}`">
-            <div class="room-card-top">
-              <el-tag :type="room.status === 'LIVE' ? 'success' : 'info'" effect="dark">
-                {{ room.status === 'LIVE' ? '进行中' : '已结束' }}
-              </el-tag>
-              <span class="room-card-time">{{ formatTime(room.createdAt) }}</span>
-            </div>
-            <div class="room-code-block">
-              <span>房间码</span>
-              <strong>{{ room.roomCode }}</strong>
-            </div>
-            <h2>{{ room.lessonTitle }}</h2>
-            <div class="room-meta">
-              <span>第 {{ room.currentPage }} / {{ room.pageCount }} 页</span>
-              <span v-if="room.status === 'ENDED'">结束于 {{ formatTime(room.endedAt) }}</span>
-              <span v-else>课堂保持同步</span>
-            </div>
-            <el-button :type="room.status === 'LIVE' ? 'primary' : 'default'" size="large" class="room-action" @click="router.push(`/teacher/classroom/${room.id}`)">
-              {{ room.status === 'LIVE' ? '进入课堂' : '查看课堂记录' }}
-              <el-icon><ArrowRight /></el-icon>
-            </el-button>
-          </article>
+        <div class="command-stage">
+          <div class="command-stage-heading">
+            <div><span class="section-kicker">课堂列表</span><h2>{{ filters.find((tab) => tab.value === filter)?.label }}课堂</h2></div>
+            <span>共 {{ filteredRooms.length }} 个课堂</span>
+          </div>
+
+          <div v-if="filteredRooms.length" class="command-session-list">
+            <article v-for="room in filteredRooms" :key="room.id" class="command-session" :class="`command-session--${room.status.toLowerCase()}`">
+              <div class="command-session-status">
+                <span class="command-session-dot"></span>
+                <span>{{ room.status === 'LIVE' ? '正在同步' : '已归档' }}</span>
+              </div>
+              <div class="command-session-title">
+                <h2>{{ room.lessonTitle }}</h2>
+                <p>创建于 {{ formatTime(room.createdAt) }}<span v-if="room.status === 'ENDED'"> · 结束于 {{ formatTime(room.endedAt) }}</span></p>
+              </div>
+              <div class="command-session-code">
+                <span>ROOM</span><strong>{{ room.roomCode }}</strong>
+              </div>
+              <div class="command-session-meta">
+                <span>第 {{ room.currentPage }} / {{ room.pageCount }} 页</span>
+                <span>{{ room.status === 'LIVE' ? '字幕同步中' : '记录可回看' }}</span>
+              </div>
+              <el-button :type="room.status === 'LIVE' ? 'primary' : 'default'" class="command-session-action" @click="router.push(`/teacher/classroom/${room.id}`)">
+                {{ room.status === 'LIVE' ? '进入课堂' : '查看记录' }}
+                <el-icon><ArrowRight /></el-icon>
+              </el-button>
+            </article>
+          </div>
+          <el-empty v-else :description="filter === 'ALL' ? '还没有课堂记录，先去课程库创建课堂吧' : '当前筛选下没有课堂'" />
         </div>
-        <el-empty v-else :description="filter === 'ALL' ? '还没有课堂记录，先去课程列表开课吧' : '当前筛选下没有课堂'" />
       </section>
     </main>
   </div>

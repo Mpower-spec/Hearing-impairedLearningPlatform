@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router/index.js'
 import './styles/main.css'
 import './styles/visual-refresh.css'
+import './styles/teacher-views.css'
 import { initAccessibilitySettings } from './accessibility/settings.js'
 
 initAccessibilitySettings()

@@ -1,81 +1,74 @@
 <template>
   <div>
-    <AppHeader>
-      <el-button @click="router.push('/teacher/lessons')">课程与课件</el-button>
-    </AppHeader>
+    <AppHeader />
 
-    <main class="page-shell prepare-center-page">
-      <div class="page-title-row">
-        <div>
-          <span class="page-kicker">AI LESSON PREP</span>
-          <h1 class="page-title">备课中心</h1>
-          <p class="page-subtitle">选择一门课程，进入 PDF 预览并生成教学目标、重点、术语与练习。</p>
-        </div>
-        <div class="actions-row">
-          <el-button :loading="loading" @click="load">刷新</el-button>
-          <el-button type="primary" @click="router.push('/teacher/lessons')">上传新课程</el-button>
-        </div>
-      </div>
-
-      <section class="prepare-process">
-        <div class="process-step"><span>01</span><strong>选择课程</strong><small>从已上传课件中选择</small></div>
-        <div class="process-line"></div>
-        <div class="process-step"><span>02</span><strong>预览 PPT</strong><small>检查转换后的 PDF 内容</small></div>
-        <div class="process-line"></div>
-        <div class="process-step"><span>03</span><strong>生成备课资料</strong><small>AI 整理教学目标与练习</small></div>
-      </section>
-
-      <div class="prepare-summary">
-        <div>
-          <span>可用课程</span>
-          <strong>{{ lessons.length }}</strong>
-        </div>
-        <div>
-          <span>课件总页数</span>
-          <strong>{{ totalPages }}</strong>
-        </div>
-        <div class="prepare-summary-note">
-          <el-icon><MagicStick /></el-icon>
-          <span>备课资料会根据 PPT 提取文字生成，可随时重新生成。</span>
-        </div>
-      </div>
-
-      <section class="panel prepare-list-panel">
-        <div class="panel-heading">
-          <div>
-            <h2>选择课程开始备课</h2>
-            <p class="muted">课程页数、创建时间和备课入口集中在这里。</p>
+    <main class="page-shell teacher-studio-page">
+      <section class="studio-hero">
+        <div class="studio-hero-copy">
+          <span class="studio-kicker">AI LESSON STUDIO</span>
+          <h1 class="page-title">备课工作室</h1>
+          <p class="page-subtitle">从课件中选择一门课程，让 AI 帮你整理教学目标、重点、术语和练习。</p>
+          <div class="studio-hero-actions">
+            <el-button size="large" :loading="loading" @click="load">刷新课程</el-button>
+            <el-button type="primary" size="large" @click="router.push('/teacher/lessons')">上传新课程</el-button>
           </div>
         </div>
+        <div class="studio-orb" aria-hidden="true">
+          <div class="studio-orb-ring"></div>
+          <el-icon><MagicStick /></el-icon>
+          <span>AI PREP</span>
+          <div class="studio-orb-metrics">
+            <strong>{{ lessons.length }}</strong><small>门课程</small>
+            <strong>{{ totalPages }}</strong><small>页资料</small>
+          </div>
+        </div>
+      </section>
 
-        <div v-if="lessons.length" class="prepare-grid">
-          <article v-for="(lesson, index) in lessons" :key="lesson.id" class="prepare-card">
-            <div class="prepare-cover" :class="`prepare-cover--${index % 3}`">
-              <span class="cover-label">COURSE {{ String(index + 1).padStart(2, '0') }}</span>
-              <strong>{{ lesson.pageCount }}</strong>
-              <small>页课件</small>
-              <div class="cover-line"></div>
-            </div>
-            <div class="prepare-card-body">
-              <div class="prepare-card-heading">
-                <h3>{{ lesson.title }}</h3>
+      <section class="studio-workbench">
+        <aside class="studio-rail">
+          <span class="studio-rail-label">WORKFLOW</span>
+          <div class="studio-step">
+            <span>01</span><div><strong>选择课程</strong><small>从已上传课件中选择</small></div>
+          </div>
+          <div class="studio-step">
+            <span>02</span><div><strong>预览内容</strong><small>检查 PDF 转换结果</small></div>
+          </div>
+          <div class="studio-step">
+            <span>03</span><div><strong>生成资料</strong><small>输出目标、重点、术语与练习</small></div>
+          </div>
+          <div class="studio-rail-note">
+            <el-icon><MagicStick /></el-icon>
+            <p>备课资料依据 PPT 提取文字生成，可随时重新生成。</p>
+          </div>
+        </aside>
+
+        <section class="studio-course-stage">
+          <div class="studio-stage-heading">
+            <div><span class="section-kicker">课程素材</span><h2>选择课程开始备课</h2></div>
+            <span>{{ lessons.length }} 份可用课件</span>
+          </div>
+
+          <div v-if="lessons.length" class="studio-course-list">
+            <article v-for="(lesson, index) in lessons" :key="lesson.id" class="studio-course-row">
+              <div class="studio-course-index">{{ String(index + 1).padStart(2, '0') }}</div>
+              <div class="studio-course-main">
+                <span>COURSE {{ String(index + 1).padStart(2, '0') }}</span>
+                <h2>{{ lesson.title }}</h2>
+                <p>创建于 {{ formatTime(lesson.createdAt) }}</p>
+              </div>
+              <div class="studio-course-meta">
+                <strong>{{ lesson.pageCount }}</strong><small>页课件</small>
                 <el-tag :type="lesson.status === 'READY' ? 'success' : 'info'" effect="plain">
                   {{ lesson.status === 'READY' ? '可备课' : lesson.status }}
                 </el-tag>
               </div>
-              <p>创建于 {{ formatTime(lesson.createdAt) }}</p>
-              <div class="prepare-card-meta">
-                <span>{{ lesson.pageCount }} 页</span>
-                <span>PDF 已就绪</span>
-              </div>
-              <el-button type="primary" size="large" class="prepare-action" @click="router.push(`/teacher/prepare/${lesson.id}`)">
-                进入备课
-                <el-icon><ArrowRight /></el-icon>
+              <el-button type="primary" class="studio-course-action" @click="router.push(`/teacher/prepare/${lesson.id}`)">
+                进入备课 <el-icon><ArrowRight /></el-icon>
               </el-button>
-            </div>
-          </article>
-        </div>
-        <el-empty v-else description="还没有课程，先上传一份 PPTX 吧" />
+            </article>
+          </div>
+          <el-empty v-else description="还没有课程，先上传一份 PPTX 吧" />
+        </section>
       </section>
     </main>
   </div>
