@@ -4,6 +4,36 @@
     <div class="ambient-aurora ambient-aurora--mint"></div>
     <div class="ambient-aurora ambient-aurora--amber"></div>
     <div class="ambient-grid"></div>
+    <div class="ambient-milkyway"></div>
+    <div class="ambient-moon"></div>
+    <div class="ambient-stars">
+      <span
+        v-for="star in 48"
+        :key="star"
+        :style="{
+          left: `${(star * 37) % 100}%`,
+          top: `${(star * 53) % 100}%`,
+          width: `${1 + star % 3}px`,
+          height: `${1 + star % 3}px`,
+          opacity: `${0.24 + (star % 5) * 0.12}`,
+          animationDelay: `${star * 0.19}s`,
+          animationDuration: `${2.6 + (star % 7) * 0.45}s`
+        }"
+      ></span>
+    </div>
+    <div class="ambient-meteors">
+      <span
+        v-for="meteor in 18"
+        :key="meteor"
+        :style="{
+          left: `${-8 + (meteor * 19) % 104}%`,
+          top: `${-14 + (meteor * 31) % 58}%`,
+          width: `${86 + (meteor % 4) * 38}px`,
+          animationDelay: `${meteor * 1.35}s`,
+          animationDuration: `${5.4 + (meteor % 5) * 1.15}s`
+        }"
+      ></span>
+    </div>
     <div class="ambient-ring ambient-ring--one"></div>
     <div class="ambient-ring ambient-ring--two"></div>
     <div class="ambient-particles">
@@ -136,5 +166,94 @@
   .ambient-grid { background-size: 34px 34px; opacity: 0.18; }
   .ambient-ring--one { display: none; }
   .ambient-wave { left: 2%; right: 2%; gap: 6px; }
+}
+.ambient-milkyway,
+.ambient-moon,
+.ambient-stars,
+.ambient-meteors {
+  position: absolute;
+  pointer-events: none;
+}
+.ambient-milkyway {
+  width: 125vw;
+  height: 48vh;
+  left: -14vw;
+  top: 2vh;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 46% 52%, rgba(94, 177, 221, 0.2), transparent 48%),
+    radial-gradient(ellipse at 62% 48%, rgba(174, 130, 221, 0.13), transparent 52%),
+    radial-gradient(ellipse at 28% 48%, rgba(70, 222, 203, 0.1), transparent 48%);
+  filter: blur(30px);
+  opacity: 0.72;
+  transform: rotate(-17deg);
+  animation: milkyway-breathe 16s ease-in-out infinite alternate;
+}
+.ambient-moon {
+  width: 150px;
+  height: 150px;
+  right: 9%;
+  top: 7%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, rgba(226, 250, 255, 0.6), rgba(136, 220, 237, 0.18) 48%, transparent 72%);
+  box-shadow: 0 0 80px rgba(106, 220, 235, 0.17);
+  filter: blur(1px);
+  opacity: 0.72;
+  animation: moon-breathe 8s ease-in-out infinite alternate;
+}
+.ambient-stars { inset: 0; }
+.ambient-stars span {
+  position: absolute;
+  border-radius: 50%;
+  background: #e9ffff;
+  box-shadow: 0 0 8px rgba(164, 242, 255, 0.9), 0 0 18px rgba(89, 201, 225, 0.4);
+  animation-name: star-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.ambient-meteors { inset: 0; overflow: hidden; }
+.ambient-meteors span {
+  position: absolute;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent 0%, rgba(83, 195, 229, 0.08) 24%, rgba(159, 239, 255, 0.74) 82%, #ffffff 100%);
+  box-shadow: 0 0 8px rgba(136, 231, 255, 0.44);
+  opacity: 0;
+  transform-origin: right center;
+  animation-name: meteor-flight;
+  animation-timing-function: cubic-bezier(0.12, 0.56, 0.28, 1);
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+.ambient-meteors span::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 8px #bdf7ff, 0 0 16px rgba(96, 220, 255, 0.9);
+  transform: translateY(-50%);
+}
+@keyframes star-twinkle {
+  0% { transform: scale(0.65); opacity: 0.18; }
+  100% { transform: scale(1.28); opacity: 0.95; }
+}
+@keyframes meteor-flight {
+  0%, 71% { opacity: 0; transform: translate3d(-14vw, -8vh, 0) rotate(32deg) scaleX(0.28); }
+  73% { opacity: 0.9; }
+  86% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate3d(54vw, 36vh, 0) rotate(32deg) scaleX(1); }
+}
+@keyframes milkyway-breathe { to { opacity: 0.48; transform: rotate(-15deg) scale(1.06); } }
+@keyframes moon-breathe { to { opacity: 0.48; transform: scale(1.06); } }
+@media (max-width: 767px) {
+  .ambient-milkyway { opacity: 0.5; filter: blur(24px); }
+  .ambient-moon { width: 100px; height: 100px; right: 4%; top: 5%; opacity: 0.46; }
+  .ambient-stars span:nth-child(2n),
+  .ambient-meteors span:nth-child(2n) { display: none; }
 }
 </style>

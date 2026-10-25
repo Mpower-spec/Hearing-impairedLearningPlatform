@@ -1482,3 +1482,37 @@ body {
 @media (max-width: 767px) {
   #app .header-actions .sign-avatar-controls { width: 100%; max-width: none; }
 }
+/* ---------- Celestial night sky ---------- */
+body {
+  background-color: #01040c;
+  background-image:
+    radial-gradient(ellipse at 76% 7%, rgba(47, 96, 151, 0.32), transparent 34%),
+    radial-gradient(ellipse at 12% 88%, rgba(19, 111, 102, 0.25), transparent 38%),
+    radial-gradient(ellipse at 48% 108%, rgba(141, 101, 48, 0.11), transparent 45%),
+    linear-gradient(154deg, #01040c 0%, #061326 48%, #0a2630 100%);
+  background-attachment: fixed;
+}
+:root[data-theme="dark"] body {
+  background-color: #000308;
+  background-image:
+    radial-gradient(ellipse at 76% 7%, rgba(33, 72, 119, 0.27), transparent 34%),
+    radial-gradient(ellipse at 12% 88%, rgba(13, 84, 80, 0.2), transparent 38%),
+    linear-gradient(154deg, #000308 0%, #04101e 50%, #071d26 100%);
+}
+:root[data-contrast="high"] body { background: #fff !important; }
+:root[data-theme="dark"][data-contrast="high"] body { background: #000 !important; }
+:root[data-reduce-motion="true"] .ambient-meteors { display: none !important; }
+:root[data-reduce-motion="true"] .ambient-stars span,
+:root[data-reduce-motion="true"] .ambient-milkyway,
+:root[data-reduce-motion="true"] .ambient-moon { animation: none !important; }#app .login-page {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(48, 191, 205, 0.14), transparent 34rem),
+    radial-gradient(circle at 92% 10%, rgba(241, 184, 62, 0.08), transparent 30rem),
+    linear-gradient(145deg, rgba(7, 28, 44, 0.78), rgba(10, 63, 80, 0.68) 54%, rgba(14, 87, 86, 0.62));
+}
+:root[data-theme="dark"] #app .login-page {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(48, 191, 205, 0.12), transparent 34rem),
+    radial-gradient(circle at 92% 10%, rgba(241, 184, 62, 0.06), transparent 30rem),
+    linear-gradient(145deg, rgba(2, 12, 21, 0.84), rgba(4, 34, 44, 0.76) 54%, rgba(6, 49, 48, 0.7));
+}
