@@ -1075,3 +1075,96 @@ body .el-drawer {
 :root[data-reduce-motion="true"] #app .login-signal-card--ai { animation: none !important; }:root[data-theme="dark"][data-contrast="high"] #app .home-welcome p,
 :root[data-theme="dark"][data-contrast="high"] #app .home-role { color: #fff !important; }
 :root[data-theme="dark"][data-contrast="high"] #app .home-role { border-color: #fff !important; }
+/* ---------- Living atmospheric canvas ---------- */
+body {
+  background-color: #061722;
+  background-image:
+    radial-gradient(ellipse at 16% 6%, rgba(20, 137, 158, 0.52), transparent 46%),
+    radial-gradient(ellipse at 92% 24%, rgba(20, 142, 119, 0.42), transparent 44%),
+    radial-gradient(ellipse at 52% 105%, rgba(173, 123, 29, 0.26), transparent 48%),
+    linear-gradient(135deg, #061722 0%, #0a3040 48%, #103a34 100%);
+  background-attachment: fixed;
+}
+.ambient-backdrop {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(5, 23, 35, 0.08), transparent 26%, rgba(3, 22, 31, 0.08));
+}
+.ambient-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  background: conic-gradient(from 90deg at 50% 50%, transparent 0 28%, rgba(54, 205, 203, 0.12) 34%, transparent 43% 66%, rgba(240, 184, 62, 0.1) 74%, transparent 83%);
+  filter: blur(34px);
+  animation: vr-ambient-spin 30s linear infinite;
+}
+.ambient-aurora { opacity: 0.64; filter: blur(54px); }
+.ambient-grid { opacity: 0.34; }
+.ambient-ring { border-color: rgba(124, 231, 226, 0.18); }
+.ambient-wave { opacity: 0.32; bottom: 14px; }
+.ambient-particles span { background: rgba(131, 241, 226, 0.52); box-shadow: 0 0 15px rgba(83, 235, 217, 0.45); }
+
+#app .page-shell {
+  border-color: rgba(154, 238, 233, 0.3);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(231, 255, 252, 0.86), transparent 36%),
+    radial-gradient(circle at 96% 18%, rgba(219, 248, 239, 0.48), transparent 30%),
+    linear-gradient(145deg, rgba(244, 255, 255, 0.84), rgba(196, 237, 238, 0.64) 48%, rgba(255, 243, 204, 0.58));
+  background-size: 170% 170%;
+  box-shadow: 0 34px 92px rgba(0, 16, 28, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  animation: vr-page-enter 520ms cubic-bezier(0.2, 0.72, 0.2, 1) both, vr-shell-flow 18s ease-in-out infinite alternate;
+}
+#app .page-shell > * { position: relative; z-index: 1; }
+#app .page-shell::before {
+  z-index: 2;
+  height: 3px;
+  opacity: 0.9;
+  background: linear-gradient(90deg, transparent, #5ee4df, #4cc7ad 32%, #f2c85e 68%, #5ee4df, transparent);
+  background-size: 180% 100%;
+  animation: vr-header-line 8s linear infinite;
+}
+#app .page-shell::after {
+  width: 420px;
+  height: 420px;
+  top: -220px;
+  right: -140px;
+  z-index: 0;
+  border: 0;
+  background: radial-gradient(circle, rgba(108, 236, 225, 0.25), transparent 66%);
+  filter: blur(12px);
+  animation: vr-pulse 8s ease-in-out infinite;
+}
+#app .panel {
+  border-color: rgba(118, 202, 207, 0.25);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(88, 224, 205, 0.1), transparent 18rem),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.82), rgba(226, 247, 246, 0.7) 62%, rgba(255, 249, 225, 0.62));
+  box-shadow: 0 18px 46px rgba(2, 28, 43, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(22px) saturate(120%);
+}
+#app .shortcut-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(60, 220, 191, 0.15), transparent 14rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(222, 246, 244, 0.68));
+  backdrop-filter: blur(18px);
+}
+#app .joined-card,
+#app .room-card,
+#app .community-post-card,
+#app .prepare-card,
+#app .video-list-item {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(65, 220, 193, 0.12), transparent 14rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.87), rgba(222, 246, 244, 0.7));
+}
+#app .home-hero { box-shadow: 0 30px 85px rgba(0, 10, 22, 0.38); }
+#app .mobile-bottom-nav { box-shadow: 0 20px 50px rgba(0, 8, 18, 0.42); }
+@keyframes vr-ambient-spin { to { transform: rotate(360deg); } }
+@keyframes vr-shell-flow { from { background-position: 0% 30%; } to { background-position: 100% 70%; } }
+
+@media (max-width: 767px) {
+  body { background-attachment: scroll; }
+  #app .page-shell {
+    background: linear-gradient(145deg, rgba(247, 255, 255, 0.88), rgba(213, 243, 241, 0.72) 55%, rgba(255, 246, 218, 0.68));
+    background-size: 160% 160%;
+  }
+}
