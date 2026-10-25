@@ -7,6 +7,12 @@
         <p class="brand-subtitle">字幕优先 · 课堂同步 · 课后复习</p>
       </div>
     </div>
+
+    <nav class="header-nav" aria-label="主导航">
+      <router-link to="/home" class="header-nav__link" :class="{ 'is-active': route.path === '/home' }">首页</router-link>
+      <router-link to="/community" class="header-nav__link" :class="{ 'is-active': route.path === '/community' }">学习社区</router-link>
+    </nav>
+
     <div class="header-actions">
       <SignAvatarControls
         v-if="session.user?.role === 'STUDENT'"
@@ -19,14 +25,16 @@
         @retry="retryAvatar"
       />
       <AccessibilitySettings />
-      <el-button class="header-community-button" :class="{ 'is-active': route.path === '/community' }" @click="router.push('/community')">学习社区</el-button>
-      <el-button v-if="route.path !== '/home'" class="header-home-button" @click="router.push('/home')">返回首页</el-button>
-      <slot />
       <span class="user-chip">
         {{ session.user?.name || session.user?.username }}
         <small>{{ roleLabel }}</small>
       </span>
       <el-button class="header-logout-button" @click="logout">退出登录</el-button>
+    </div>
+
+    <div v-if="$slots.default" class="header-context">
+      <span class="header-context__label">快捷操作</span>
+      <div class="header-context__actions"><slot /></div>
     </div>
   </header>
 </template>

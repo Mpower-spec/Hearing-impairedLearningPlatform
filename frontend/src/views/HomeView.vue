@@ -3,81 +3,54 @@
     <AppHeader />
 
     <main class="page-shell home-page">
-      <section class="home-welcome">
-        <div>
-          <span class="home-role">{{ roleLabel }}</span>
-          <h1>你好，{{ displayName }}</h1>
-          <p>字幕优先，让课堂内容更清晰；协作同步，让每一次学习都有迹可循。</p>
-        </div>
-        <div class="home-signal" aria-hidden="true">
-          <div class="home-signal__label"><span class="signal-dot"></span> VOICE TO TEXT</div>
-          <div class="home-signal__wave">
-            <span v-for="bar in 18" :key="bar" :style="{ '--bar': bar }"></span>
+      <section class="home-stage" aria-label="学习概览与功能入口">
+        <article class="home-stage-main">
+          <div class="home-stage-copy">
+            <div class="home-stage-eyebrow"><span class="signal-dot"></span><span>{{ roleLabel }} · {{ slides[0].eyebrow }}</span></div>
+            <h1>你好，{{ displayName }}</h1>
+            <h2>{{ slides[0].title }}</h2>
+            <p>{{ slides[0].description }}</p>
+            <div class="home-stage-points">
+              <span v-for="point in slides[0].points" :key="point">{{ point }}</span>
+            </div>
+            <div class="home-stage-actions">
+              <el-button type="primary" size="large" @click="navigate(slides[0].action)">
+                {{ slides[0].actionLabel }}
+                <el-icon><ArrowRight /></el-icon>
+              </el-button>
+              <span>从当前页面直接进入学习流程</span>
+            </div>
           </div>
-          <div class="home-signal__meta"><span>实时字幕通道</span><strong>ONLINE</strong></div>
+          <div class="home-stage-visual" aria-hidden="true">
+            <div class="home-live-preview">
+              <div class="home-live-preview__top"><span class="live-dot"></span><span>实时字幕</span><strong>LIVE</strong></div>
+              <p>今天我们来学习光合作用，植物需要阳光、水和二氧化碳。</p>
+              <div class="home-caption-progress"><span></span></div>
+            </div>
+            <div class="home-signal">
+              <div class="home-signal__label"><span class="signal-dot"></span> VOICE TO TEXT</div>
+              <div class="home-signal__wave">
+                <span v-for="bar in 18" :key="bar" :style="{ '--bar': bar }"></span>
+              </div>
+              <div class="home-signal__meta"><span>实时字幕通道</span><strong>ONLINE</strong></div>
+            </div>
+          </div>
+        </article>
+        <div class="home-stage-side">
+          <button v-for="(slide, index) in slides.slice(1)" :key="slide.key" class="home-mini-panel" :class="`home-mini-panel--${slide.theme}`" @click="navigate(slide.action)">
+            <span class="home-mini-panel__index">0{{ index + 2 }}</span>
+            <span class="home-mini-panel__copy">
+              <span class="home-mini-panel__eyebrow">{{ slide.eyebrow }}</span>
+              <strong>{{ slide.title }}</strong>
+              <small>{{ slide.description }}</small>
+            </span>
+            <el-icon class="home-mini-panel__arrow"><ArrowRight /></el-icon>
+          </button>
+          <div class="home-rhythm-card" aria-hidden="true">
+            <div><span class="section-kicker">LEARNING RHYTHM</span><strong>字幕与学习保持同频</strong></div>
+            <div class="home-rhythm-wave"><span v-for="bar in 24" :key="bar" :style="{ '--bar': bar }"></span></div>
+          </div>
         </div>
-
-      </section>
-
-      <section class="home-hero" aria-label="平台功能介绍">
-        <el-carousel :autoplay="!accessibilitySettings.reduceMotion" :interval="5200" height="clamp(240px, 27vh, 290px)" arrow="always" indicator-position="none">
-          <el-carousel-item v-for="slide in slides" :key="slide.key">
-            <article class="hero-slide" :class="`hero-slide--${slide.theme}`">
-              <div class="hero-copy">
-                <span class="hero-eyebrow">{{ slide.eyebrow }}</span>
-                <h2>{{ slide.title }}</h2>
-                <p>{{ slide.description }}</p>
-                <div class="hero-points">
-                  <span v-for="point in slide.points" :key="point">{{ point }}</span>
-                </div>
-                <el-button type="primary" class="hero-action" @click="navigate(slide.action)">
-                  {{ slide.actionLabel }}
-                  <el-icon><ArrowRight /></el-icon>
-                </el-button>
-              </div>
-
-              <div class="hero-visual" aria-hidden="true">
-                <div v-if="slide.key === 'captions'" class="caption-mockup">
-                  <div class="mockup-top"><span class="live-dot"></span>实时字幕</div>
-                  <p>今天我们来学习光合作用，植物需要阳光、水和二氧化碳。</p>
-                  <div class="wave-row">
-                    <span v-for="bar in 14" :key="bar" :style="{ height: `${14 + (bar * 17) % 46}px`, animationDelay: `${bar * 0.08}s` }"></span>
-                  </div>
-                </div>
-
-                <div v-else-if="slide.key === 'sync'" class="slide-mockup">
-                  <div class="slide-mockup__top">
-                    <span>课堂同步</span>
-                    <span>第 2 / 8 页</span>
-                  </div>
-                  <div class="slide-mockup__canvas">
-                    <span class="slide-kicker">LESSON 02</span>
-                    <strong>课堂内容<br />跟着老师一起走</strong>
-                    <div class="slide-mockup__line"></div>
-                  </div>
-                  <div class="slide-mockup__footer"><span></span><span></span><span></span><span class="active"></span><span></span></div>
-                </div>
-
-                <div v-else class="material-mockup">
-                  <div class="material-mockup__top">
-                    <span class="material-mark">{{ teacher ? 'AI' : '学' }}</span>
-                    <span>{{ teacher ? 'AI 备课中心' : '视频学习助手' }}</span>
-                  </div>
-                  <h3>{{ teacher ? '教学目标' : '视频字幕' }}</h3>
-                  <div class="material-line material-line--long"></div>
-                  <div class="material-line"></div>
-                  <h3>{{ teacher ? '重点与练习' : '学习笔记' }}</h3>
-                  <div class="material-line material-line--long"></div>
-                  <div class="material-line material-line--short"></div>
-                  <div class="material-tags">
-                    <template v-if="teacher"><span>目标</span><span>重点</span><span>练习</span></template>
-                    <template v-else><span>字幕</span><span>笔记</span><span>回看</span></template>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </el-carousel-item>
-        </el-carousel>
       </section>
 
       <section class="home-shortcuts">
@@ -108,16 +81,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, ChatDotRound, Document, Folder, MagicStick, Microphone, Monitor, VideoCamera } from '@element-plus/icons-vue'
+import { ArrowRight, ChatDotRound, Folder, MagicStick, Monitor, VideoCamera } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
 
 import { session } from '../auth/session.js'
-import { accessibilitySettings } from '../accessibility/settings.js'
 
 const router = useRouter()
 
 const role = computed(() => session.user?.role)
-const teacher = computed(() => role.value === 'TEACHER')
 const displayName = computed(() => session.user?.name || session.user?.username || '同学')
 const roleLabel = computed(() => role.value === 'TEACHER' ? '教师端' : '学生端')
 
