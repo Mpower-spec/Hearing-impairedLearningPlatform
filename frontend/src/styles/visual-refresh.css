@@ -1588,3 +1588,81 @@ body {
   #app .login-hero h1 { font-size: 26px; }
   #app .login-page .login-card { padding: 19px 15px; }
 }
+/* ---------- Mobile performance mode ---------- */
+@media (max-width: 767px) {
+  /* Keep a calm static sky on phones. Desktop keeps the full effects. */
+  #app .ambient-meteors,
+  #app .ambient-wave { display: none !important; }
+  #app .ambient-stars span:nth-child(n + 17) { display: none !important; }
+  #app .ambient-stars span {
+    animation-duration: 4.5s !important;
+    box-shadow: 0 0 6px rgba(164, 242, 255, 0.6) !important;
+  }
+  #app .ambient-aurora,
+  #app .ambient-milkyway,
+  #app .ambient-moon,
+  #app .ambient-ring,
+  #app .ambient-backdrop::after {
+    animation: none !important;
+  }
+  #app .ambient-aurora {
+    filter: blur(32px) !important;
+    opacity: 0.25 !important;
+  }
+  #app .ambient-milkyway { filter: blur(20px) !important; opacity: 0.38 !important; }
+  #app .ambient-moon { filter: none !important; opacity: 0.38 !important; }
+  #app .ambient-backdrop::after { opacity: 0.18 !important; }
+  #app .ambient-grid { opacity: 0.16 !important; }
+
+  #app .app-header {
+    position: relative;
+    backdrop-filter: none !important;
+    box-shadow: 0 8px 22px rgba(2, 20, 33, 0.22);
+  }
+  #app .app-header::after { animation: none !important; }
+  #app .page-shell {
+    animation: none !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 16px 38px rgba(2, 25, 39, 0.18);
+  }
+  #app .page-shell::before,
+  #app .page-shell::after { animation: none !important; }
+  #app .panel,
+  #app .home-stage-main,
+  #app .home-mini-panel,
+  #app .home-signal,
+  #app .shortcut-card,
+  #app .joined-card,
+  #app .room-card,
+  #app .prepare-card,
+  #app .community-post-card,
+  #app .command-session,
+  #app .command-stage,
+  #app .studio-course-row,
+  #app .studio-course-stage,
+  #app .login-card,
+  #app .mobile-bottom-nav {
+    backdrop-filter: none !important;
+  }
+  #app .panel,
+  #app .shortcut-card,
+  #app .joined-card,
+  #app .room-card,
+  #app .prepare-card,
+  #app .community-post-card,
+  #app .command-session,
+  #app .studio-course-row { animation: none !important; }
+  #app .home-stage-main::before,
+  #app .home-stage-main::after,
+  #app .home-stage-visual,
+  #app .home-caption-progress span,
+  #app .home-rhythm-wave span,
+  #app .hero-slide::before,
+  #app .hero-slide::after,
+  #app .hero-visual,
+  #app .signal-dot,
+  #app .login-page .login-card::before { animation: none !important; }
+  #app .home-caption-progress span { width: 58%; }
+  #app .home-rhythm-wave span { height: 10px; }
+  #app .mobile-bottom-nav { box-shadow: 0 12px 26px rgba(0, 8, 18, 0.28); }
+}
