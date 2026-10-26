@@ -1516,3 +1516,75 @@ body {
     radial-gradient(circle at 92% 10%, rgba(241, 184, 62, 0.06), transparent 30rem),
     linear-gradient(145deg, rgba(2, 12, 21, 0.84), rgba(4, 34, 44, 0.76) 54%, rgba(6, 49, 48, 0.7));
 }
+/* ---------- Mobile login layout ---------- */
+@media (max-width: 767px) {
+  #app .login-page {
+    min-height: 100dvh;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-content: initial;
+    gap: 12px;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  #app .login-hero {
+    order: 1;
+    min-height: 0;
+    padding: 18px;
+    border-radius: 20px;
+  }
+  #app .login-hero::after { display: none; }
+  #app .login-hero .brand {
+    margin-bottom: 12px !important;
+    gap: 10px;
+  }
+  #app .login-hero .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    font-size: 18px;
+  }
+  #app .login-hero .brand-title { font-size: 17px; }
+  #app .login-hero .brand-subtitle { font-size: 10px; }
+  #app .login-hero h1 {
+    margin: 0;
+    max-width: none;
+    font-size: clamp(27px, 8.2vw, 32px);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+  #app .login-hero > p,
+  #app .login-hero .hero-points,
+  #app .login-hero .login-signal-board { display: none; }
+  #app .login-panel-wrap {
+    order: 2;
+    display: block;
+    width: 100%;
+    padding: 0;
+  }
+  #app .login-page .login-card {
+    width: 100%;
+    padding: 22px 18px;
+    border-radius: 20px;
+    animation: none;
+  }
+  #app .login-page .login-card h2 { font-size: 24px; }
+  #app .login-page .login-card .muted { margin-bottom: 18px; font-size: 12px; }
+  #app .login-page .demo-accounts { margin-top: 16px; padding: 12px; }
+  #app .login-page .demo-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  #app .login-page .demo-buttons .el-button {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+@media (max-width: 380px) {
+  #app .login-hero { padding: 15px; }
+  #app .login-hero h1 { font-size: 26px; }
+  #app .login-page .login-card { padding: 19px 15px; }
+}
