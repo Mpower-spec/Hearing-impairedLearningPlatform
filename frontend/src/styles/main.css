@@ -851,10 +851,16 @@ body { color: var(--ink); }
 .interim-caption,
 .caption-focus .interim-caption { font-size: calc(var(--caption-font-size) * .5); line-height: var(--caption-line-height); }
 .video-player::cue {
-  color: var(--caption-card-text);
-  background: rgba(7, 24, 36, .92);
+  color: #ffffff;
+  background: transparent;
+  background-color: transparent;
   font-size: calc(var(--caption-font-size) * .55);
   line-height: var(--caption-line-height);
+  font-weight: 700;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.98),
+    0 0 5px rgba(0, 0, 0, 0.92),
+    0 0 10px rgba(0, 0, 0, 0.72);
 }
 .panel,
 .video-list-item,
