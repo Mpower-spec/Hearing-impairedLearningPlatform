@@ -1,5 +1,5 @@
 <template>
-  <span class="sign-avatar-runtime" aria-hidden="true"></span>
+  <div ref="hostRef" class="sign-avatar-runtime" :class="{ 'sign-avatar-runtime--embedded': embedded }" aria-hidden="true"></div>
 </template>
 
 <script setup>
@@ -8,7 +8,9 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 const props = defineProps({
   initialText: { type: String, default: '欢迎使用，祝你学习顺利' },
   signText: { type: String, default: '' },
-  autoPlay: { type: Boolean, default: true }
+  autoPlay: { type: Boolean, default: true },
+  embedded: { type: Boolean, default: false },
+  avatarSize: { type: Number, default: 4 }
 })
 const emit = defineEmits(['ready', 'error', 'visibility-change', 'state-change'])
 
@@ -16,9 +18,12 @@ const SDK_URL = 'https://avatar.gbqr.net/yiyu.js'
 const WELCOME_FALLBACK_MS = 6000
 const CAPTION_FALLBACK_MS = 10000
 const SDK_READY_TIMEOUT_MS = 45000
-let sdkPromise = null
-let sharedApp = null
-let sharedReady = false
+const runtime = (window.__hpSignAvatarRuntime ||= {
+  sdkPromise: null,
+  app: null,
+  ready: false,
+  element: null
+})
 let disposed = false
 let readyTimer = null
 let welcomeFallbackTimer = null
@@ -34,6 +39,8 @@ let captionSessionStarted = false
 let lastCaptionId = null
 let lastCaptionText = ''
 let captionPendingAfterReady = ''
+let resizeObserver = null
+const hostRef = ref(null)
 const status = ref('loading')
 const errorMessage = ref('')
 const hidden = ref(false)
@@ -53,23 +60,25 @@ watch([status, hidden, playing, errorMessage], () => {
 
 async function loadSdk() {
   if (window.yiyu?.app) return window.yiyu.app
-  if (!sdkPromise) {
-    sdkPromise = import(/* @vite-ignore */ SDK_URL)
+  if (!runtime.sdkPromise) {
+    runtime.sdkPromise = import(/* @vite-ignore */ SDK_URL)
       .then((module) => {
         const app = module?.yiyu || window.yiyu?.app
         if (!app) throw new Error('SDK 未暴露 yiyu.app')
         return app
       })
       .catch((error) => {
-        sdkPromise = null
+        runtime.sdkPromise = null
         throw error
       })
   }
-  return sdkPromise
+  return runtime.sdkPromise
 }
 
 function getAvatarElement() {
-  return document.getElementById('yiyuAppElement')
+  if (runtime.element) return runtime.element
+  runtime.element = document.getElementById('yiyuAppElement')
+  return runtime.element
 }
 
 function supportsWebGl() {
@@ -81,17 +90,51 @@ function supportsWebGl() {
   }
 }
 
+function positionEmbeddedAvatar() {
+  const host = hostRef.value
+  const element = getAvatarElement()
+  if (!host || !element) return
+  try {
+    if (element.parentElement !== host) host.appendChild(element)
+    runtime.app?.setSize('100%', '100%')
+    runtime.app?.setPosition('0px', '0px')
+    Object.assign(element.style, {
+      display: 'block',
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      right: 'auto',
+      bottom: 'auto',
+      width: '100%',
+      height: '100%',
+      zIndex: '1',
+      cursor: 'default',
+      userSelect: 'none',
+      opacity: hidden.value ? '0' : '1',
+      pointerEvents: 'none'
+    })
+    initialPositionApplied = true
+  } catch (error) {
+    console.warn('[SignAvatar] 数字人嵌入定位失败', error)
+  }
+}
+
 function positionAvatarInitially() {
   if (initialPositionApplied) return
   const element = getAvatarElement()
   if (!element) return
+  if (props.embedded) {
+    positionEmbeddedAvatar()
+    return
+  }
+  if (element.parentElement !== document.body) document.body.appendChild(element)
   const width = Math.min(340, Math.max(260, window.innerWidth - 24))
   const height = Math.min(400, Math.max(300, window.innerHeight - 24))
   const top = Math.max(84, Math.min(112, window.innerHeight - height - 8))
   const left = Math.max(12, window.innerWidth - width - 24)
   try {
-    sharedApp?.setSize(`${width}px`, `${height}px`)
-    sharedApp?.setPosition(`${top}px`, `${left}px`)
+    runtime.app?.setSize(`${width}px`, `${height}px`)
+    runtime.app?.setPosition(`${top}px`, `${left}px`)
     Object.assign(element.style, {
       display: 'block',
       position: 'fixed',
@@ -122,14 +165,14 @@ function onHtmlReady() {
 
 function showAvatar() {
   hidden.value = false
-  if (sharedApp && sharedReady) {
-    try { sharedApp.enableYiyuApp() } catch { /* SDK may not be ready yet */ }
+  if (runtime.app && runtime.ready) {
+    try { runtime.app.enableYiyuApp() } catch { /* SDK may not be ready yet */ }
   }
   const element = getAvatarElement()
   if (element) {
     element.style.display = 'block'
     element.style.opacity = '1'
-    element.style.pointerEvents = 'auto'
+    element.style.pointerEvents = props.embedded ? 'none' : 'auto'
   }
   emit('visibility-change', true)
 }
@@ -138,8 +181,8 @@ function hideAvatar() {
   hidden.value = true
   stopWelcome()
   stopCaption(true)
-  if (sharedApp) {
-    try { sharedApp.disableYiyuApp() } catch { /* ignored */ }
+  if (runtime.app) {
+    try { runtime.app.disableYiyuApp() } catch { /* ignored */ }
   }
   const element = getAvatarElement()
   if (element) element.style.pointerEvents = 'none'
@@ -166,7 +209,7 @@ function scheduleWelcomeFallback() {
 }
 
 function advanceWelcome() {
-  if (!playing.value || !sharedApp || activePlaybackType !== 'welcome') return
+  if (!playing.value || !runtime.app || activePlaybackType !== 'welcome') return
   clearWelcomeFallback()
   if (welcomeIndex >= welcomeSegments.length) {
     playing.value = false
@@ -176,7 +219,7 @@ function advanceWelcome() {
   const next = welcomeSegments[welcomeIndex]
   welcomeIndex += 1
   try {
-    sharedApp.appendTranslate(next)
+    runtime.app.appendTranslate(next)
     lastAdvanceAt = Date.now()
     scheduleWelcomeFallback()
   } catch (error) {
@@ -206,8 +249,8 @@ function stopWelcome() {
   welcomeIndex = 0
   lastAdvanceAt = 0
   clearWelcomeFallback()
-  if (sharedApp) {
-    try { sharedApp.cancelTranslation() } catch { /* ignored */ }
+  if (runtime.app) {
+    try { runtime.app.cancelTranslation() } catch { /* ignored */ }
   }
 }
 
@@ -225,14 +268,14 @@ function scheduleCaptionFallback() {
 
 function playCaptionSegment(text) {
   if (!text || hidden.value) return
-  if (!sharedApp || status.value !== 'ready') return
+  if (!runtime.app || status.value !== 'ready') return
   try {
     if (!captionSessionStarted) {
-      sharedApp.cancelTranslation()
-      sharedApp.startTranslate(text)
+      runtime.app.cancelTranslation()
+      runtime.app.startTranslate(text)
       captionSessionStarted = true
     } else {
-      sharedApp.appendTranslate(text)
+      runtime.app.appendTranslate(text)
     }
     activePlaybackType = 'caption'
     playing.value = true
@@ -268,8 +311,8 @@ function stopCaption(preserveReplay = true) {
     playing.value = false
     activePlaybackType = null
     captionSessionStarted = false
-    if (sharedApp) {
-      try { sharedApp.cancelTranslation() } catch { /* ignored */ }
+    if (runtime.app) {
+      try { runtime.app.cancelTranslation() } catch { /* ignored */ }
     }
   }
   pendingCaptionText = ''
@@ -298,7 +341,7 @@ function pushCaption(text, captionId) {
   if (lastCaptionId === id) return
   lastCaptionId = id
   lastCaptionText = normalized
-  if (!sharedApp || status.value !== 'ready') {
+  if (!runtime.app || status.value !== 'ready') {
     captionPendingAfterReady = normalized
     return
   }
@@ -326,7 +369,7 @@ function replay() {
 }
 
 function playWelcome() {
-  if (!sharedApp || status.value !== 'ready' || hidden.value) return
+  if (!runtime.app || status.value !== 'ready' || hidden.value) return
   const segments = splitSignSegments(welcomeText.value)
   if (!segments.length) return
   stopCaption(true)
@@ -338,7 +381,7 @@ function playWelcome() {
   playing.value = true
   lastAdvanceAt = Date.now()
   try {
-    sharedApp.startTranslate(segments[0])
+    runtime.app.startTranslate(segments[0])
     scheduleWelcomeFallback()
   } catch (error) {
     playing.value = false
@@ -351,11 +394,11 @@ function playWelcome() {
 
 function configureReadyApp() {
   status.value = 'ready'
-  sharedReady = true
+  runtime.ready = true
   errorMessage.value = ''
-  try { sharedApp.setIsShowTextarea(false) } catch { /* optional SDK UI */ }
-  try { sharedApp.onSentenceFinished(handleSentenceFinished) } catch { /* optional SDK callback */ }
-  try { sharedApp.setAvatarSize(4) } catch { /* optional SDK sizing */ }
+  try { runtime.app.setIsShowTextarea(false) } catch { /* optional SDK UI */ }
+  try { runtime.app.onSentenceFinished(handleSentenceFinished) } catch { /* optional SDK callback */ }
+  try { runtime.app.setAvatarSize(props.avatarSize) } catch { /* optional SDK sizing */ }
   positionAvatarInitially()
   emit('ready')
   if (captionPendingAfterReady) {
@@ -377,6 +420,8 @@ function onAppReady() {
 }
 
 async function initializeAvatar() {
+  disposed = false
+  welcomeStarted = false
   clearTimeout(readyTimer)
   status.value = 'loading'
   errorMessage.value = ''
@@ -388,7 +433,7 @@ async function initializeAvatar() {
     emit('error', new Error(errorMessage.value))
     return
   }
-  if (sharedReady && sharedApp) {
+  if (runtime.ready && runtime.app) {
     configureReadyApp()
     showAvatar()
     return
@@ -402,10 +447,10 @@ async function initializeAvatar() {
   }
   try {
     console.info('[SignAvatar] SDK 脚本已加载，开始初始化数字人')
-    sharedApp = await loadSdk()
-    try { sharedApp.onHtmlReady(onHtmlReady) } catch { /* optional SDK callback */ }
-    sharedApp.onAppReady(onAppReady)
-    sharedApp.init({
+    runtime.app = await loadSdk()
+    try { runtime.app.onHtmlReady(onHtmlReady) } catch { /* optional SDK callback */ }
+    runtime.app.onAppReady(onAppReady)
+    runtime.app.init({
       name: account,
       showToast: false,
       draggable: true,
@@ -413,7 +458,7 @@ async function initializeAvatar() {
       readLocalResource: false
     })
     readyTimer = window.setTimeout(() => {
-      if (status.value === 'loading' && !sharedReady) {
+      if (status.value === 'loading' && !runtime.ready) {
         status.value = 'error'
         errorMessage.value = htmlReady.value
           ? '数字人资源已加载，但动作服务未在 45 秒内就绪'
@@ -436,15 +481,23 @@ function retry() {
 
 defineExpose({ replay, pushCaption, clearCaptions, showAvatar, hideAvatar, retry })
 
-onMounted(initializeAvatar)
+onMounted(() => {
+  if (props.embedded && hostRef.value && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => positionEmbeddedAvatar())
+    resizeObserver.observe(hostRef.value)
+  }
+  initializeAvatar()
+})
 onBeforeUnmount(() => {
   disposed = true
   stopWelcome()
   stopCaption(false)
   clearTimeout(readyTimer)
+  resizeObserver?.disconnect()
+  resizeObserver = null
   const element = getAvatarElement()
   if (element) {
-    try { sharedApp?.disableYiyuApp() } catch { /* ignored */ }
+    try { runtime.app?.disableYiyuApp() } catch { /* ignored */ }
     element.style.display = 'none'
   }
 })
@@ -452,4 +505,14 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .sign-avatar-runtime { display: none; }
+.sign-avatar-runtime--embedded {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
 </style>

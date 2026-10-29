@@ -1,15 +1,16 @@
 <template>
   <main class="login-page">
+    <RouterLink class="login-back-home" to="/">返回外部首页</RouterLink>
     <section class="login-hero">
       <div class="brand" style="margin-bottom: 38px">
         <div class="brand-mark" aria-hidden="true">声</div>
         <div>
           <span class="brand-title" style="color: #fff">声学无碍学习平台</span>
-          <p class="brand-subtitle" style="color: #b9d9e6">Accessible Classroom Demo</p>
+          <p class="brand-subtitle" style="color: #b9d9e6">Accessible Classroom</p>
         </div>
       </div>
       <h1>让每一句话<br />都被看见</h1>
-      <p>教师同步演示文稿与实时字幕，学生通过房间码进入课堂，课后自动沉淀摘要、重点与复习资料。</p>
+      <p>教师同步课件与实时字幕，学生通过房间码进入课堂，课后自动沉淀摘要、重点与复习资料。</p>
       <div class="hero-points" aria-label="平台特点">
         <div class="hero-point">实时字幕优先</div>
         <div class="hero-point">PPT 页码同步</div>
@@ -34,7 +35,7 @@
     <section class="login-panel-wrap">
       <div class="login-card panel">
         <h2>登录学习平台</h2>
-        <p class="muted">使用预置演示账号进入教师端或学生端。</p>
+        <p class="muted">使用预置账号进入教师端或学生端。</p>
         <el-form label-position="top" @submit.prevent="submit">
           <el-form-item label="用户名">
             <el-input v-model="form.username" size="large" autocomplete="username" placeholder="请输入用户名" />
@@ -47,9 +48,9 @@
             登录
           </el-button>
         </el-form>
-        <div class="demo-accounts">
-          <p>演示账号，点击快速填入：</p>
-          <div class="demo-buttons">
+        <div class="preset-accounts">
+          <p>预置账号，点击快速填入：</p>
+          <div class="preset-buttons">
             <el-button size="small" @click="fill('teacher')">教师 teacher / 123456</el-button>
             <el-button size="small" @click="fill('student')">学生 student / 123456</el-button>
           </div>
@@ -94,3 +95,47 @@ async function submit() {
   }
 }
 </script>
+
+<style scoped>
+.login-back-home {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  color: #d9f5f1;
+  background: rgba(7, 29, 44, 0.72);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+}
+.login-back-home:hover { color: #ffffff; background: rgba(7, 29, 44, 0.9); }
+@media (max-width: 767px) {
+  .login-back-home { position: static; margin: 0 0 8px; align-self: flex-start; }
+}
+</style>
+
+<style scoped>
+.login-back-home {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  color: #d9f5f1;
+  background: rgba(7, 29, 44, 0.72);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+}
+.login-back-home:hover { color: #ffffff; background: rgba(7, 29, 44, 0.9); }
+@media (max-width: 767px) {
+  .login-back-home { position: static; margin: 0 0 8px; align-self: flex-start; }
+}
+</style>

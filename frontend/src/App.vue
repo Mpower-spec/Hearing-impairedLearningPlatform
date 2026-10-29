@@ -1,9 +1,9 @@
 <template>
-  <AmbientBackdrop />
+  <AmbientBackdrop v-if="!isPublicPage" />
   <router-view />
-  <MobileBottomNav v-if="session.user?.role === 'STUDENT' && route.path !== '/login'" />
+  <MobileBottomNav v-if="showStudentChrome" />
   <SignAvatarWidget
-    v-if="session.user?.role === 'STUDENT' && route.path !== '/login'"
+    v-if="showStudentChrome"
     ref="avatarRef"
     initial-text="欢迎使用，祝你学习顺利"
     sign-text="欢迎使用，祝你学习顺利"
@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AmbientBackdrop from './components/AmbientBackdrop.vue'
 import MobileBottomNav from './components/MobileBottomNav.vue'
@@ -23,6 +23,8 @@ import { session } from './auth/session.js'
 const route = useRoute()
 const avatarRef = ref(null)
 let unbindAvatar = null
+const isPublicPage = computed(() => route.meta.public === true)
+const showStudentChrome = computed(() => session.user?.role === 'STUDENT' && !isPublicPage.value)
 
 watch(avatarRef, (api) => {
   unbindAvatar?.()

@@ -1,0 +1,17 @@
+{
+  "height": 600,
+  "width": 960,
+  "output": "frontend/public/assets",
+  "frameCount": 240,
+  "fps": 20,
+  "files": [
+    "homepage-demo.gif",
+    "homepage-demo-800x500.gif",
+    "homepage-demo-poster.png"
+  ],
+  "bytes": {
+    "smallGif": 1747586,
+    "mainGif": 2190051
+  },
+  "durationSeconds": 12
+}

@@ -568,7 +568,7 @@ body .el-drawer {
 }
 #app .login-page .login-card::before { height: 4px; background: linear-gradient(90deg, #20b7cc, #35c69d, #f0b429, #20b7cc); background-size: 220% 100%; animation: vr-header-line 7s linear infinite; }
 #app .login-page .login-card h2 { font-size: clamp(28px, 3vw, 36px); }
-#app .demo-accounts { border-color: rgba(47, 148, 161, 0.2); background: linear-gradient(135deg, rgba(235, 249, 248, 0.9), rgba(251, 249, 240, 0.86)); }
+#app .preset-accounts { border-color: rgba(47, 148, 161, 0.2); background: linear-gradient(135deg, rgba(235, 249, 248, 0.9), rgba(251, 249, 240, 0.86)); }
 @keyframes vr-pulse { 50% { transform: scale(1.16); opacity: 0.82; } }
 @keyframes vr-wave { from { transform: scaleY(0.28); opacity: 0.45; } to { transform: scaleY(1); opacity: 1; } }
 @keyframes vr-float { 50% { transform: translateY(-9px); } }
@@ -927,7 +927,7 @@ body .el-drawer {
 :root[data-theme="dark"] #app .danmaku-item { color: #f3f0df; border-color: rgba(196, 156, 57, 0.24); background: rgba(63, 51, 22, 0.8); }
 :root[data-theme="dark"] #app .login-page { background: radial-gradient(circle at 8% 0%, rgba(48, 191, 205, 0.2), transparent 34rem), radial-gradient(circle at 92% 10%, rgba(241, 184, 62, 0.12), transparent 30rem), #04121d; }
 :root[data-theme="dark"] #app .login-page .login-card { background: linear-gradient(150deg, rgba(16, 43, 55, 0.98), rgba(8, 36, 40, 0.97)); border-color: rgba(91, 190, 196, 0.22); }
-:root[data-theme="dark"] #app .demo-accounts { border-color: rgba(91, 183, 189, 0.18); background: linear-gradient(135deg, rgba(18, 54, 60, 0.9), rgba(35, 48, 33, 0.82)); }
+:root[data-theme="dark"] #app .preset-accounts { border-color: rgba(91, 183, 189, 0.18); background: linear-gradient(135deg, rgba(18, 54, 60, 0.9), rgba(35, 48, 33, 0.82)); }
 
 /* ---------- High contrast ---------- */
 :root[data-contrast="high"] #app .app-header {
@@ -1061,12 +1061,12 @@ body .el-drawer {
 :root[data-contrast="high"] #app .login-page .login-card h2,
 :root[data-contrast="high"] #app .login-page .login-card label,
 :root[data-contrast="high"] #app .login-page .login-card .muted { color: #000 !important; }
-:root[data-contrast="high"] #app .demo-accounts { border: 2px solid #000 !important; background: #fff !important; }
+:root[data-contrast="high"] #app .preset-accounts { border: 2px solid #000 !important; background: #fff !important; }
 :root[data-theme="dark"][data-contrast="high"] #app .login-page .login-card { color: #fff !important; border-color: #fff !important; background: #000 !important; }
 :root[data-theme="dark"][data-contrast="high"] #app .login-page .login-card h2,
 :root[data-theme="dark"][data-contrast="high"] #app .login-page .login-card label,
 :root[data-theme="dark"][data-contrast="high"] #app .login-page .login-card .muted { color: #fff !important; }
-:root[data-theme="dark"][data-contrast="high"] #app .demo-accounts { border-color: #fff !important; background: #000 !important; }
+:root[data-theme="dark"][data-contrast="high"] #app .preset-accounts { border-color: #fff !important; background: #000 !important; }
 :root[data-reduce-motion="true"] #app .home-signal__wave span,
 :root[data-reduce-motion="true"] #app .login-signal-wave span,
 :root[data-reduce-motion="true"] #app .signal-dot,
@@ -1572,13 +1572,13 @@ body {
   }
   #app .login-page .login-card h2 { font-size: 24px; }
   #app .login-page .login-card .muted { margin-bottom: 18px; font-size: 12px; }
-  #app .login-page .demo-accounts { margin-top: 16px; padding: 12px; }
-  #app .login-page .demo-buttons {
+  #app .login-page .preset-accounts { margin-top: 16px; padding: 12px; }
+  #app .login-page .preset-buttons {
     display: grid;
     grid-template-columns: 1fr;
     gap: 7px;
   }
-  #app .login-page .demo-buttons .el-button {
+  #app .login-page .preset-buttons .el-button {
     width: 100%;
     margin-left: 0;
   }
