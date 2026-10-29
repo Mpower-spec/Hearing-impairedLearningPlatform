@@ -100,6 +100,7 @@ import AppHeader from '../components/AppHeader.vue'
 import PdfStage from '../components/PdfStage.vue'
 import http from '../api/http.js'
 import { session } from '../auth/session.js'
+import { clearSignCaptions, pushSignCaption } from '../avatar/avatarStore.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -201,6 +202,7 @@ function handleMessage(message) {
     case 'caption':
       currentCaption.value = message.text
       addCaption({ id: message.id, text: message.text, createdAt: message.createdAt })
+      pushSignCaption(message.text, message.id)
       break
     case 'danmaku':
       addDanmaku(message)
@@ -210,6 +212,7 @@ function handleMessage(message) {
       connectionState.value = 'live'
       connectionText.value = '课堂已结束'
       stopSpeech()
+      clearSignCaptions()
       ElMessage.info('课堂已结束')
       break
     case 'error':
@@ -364,6 +367,7 @@ async function endClass() {
     await http.post(`/rooms/${roomId}/end`)
     status.value = 'ENDED'
     connectionText.value = '课堂已结束'
+    clearSignCaptions()
   }
 }
 
@@ -398,6 +402,7 @@ onBeforeUnmount(() => {
   manuallyClosed = true
   clearTimeout(reconnectTimer)
   stopSpeech()
+  clearSignCaptions()
   try { socket?.close() } catch { /* ignored */ }
 })
 </script>
