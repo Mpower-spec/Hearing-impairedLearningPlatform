@@ -57,8 +57,11 @@ button, input, textarea { font: inherit; }
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   z-index: 30;
   isolation: isolate;
   background:
@@ -68,6 +71,11 @@ button, input, textarea { font: inherit; }
   backdrop-filter: blur(16px) saturate(130%);
   border-bottom: 1px solid rgba(11, 110, 153, 0.16);
   box-shadow: 0 8px 28px rgba(16, 42, 67, 0.08);
+}
+.app-header-spacer {
+  width: 100%;
+  min-height: 76px;
+  pointer-events: none;
 }
 .app-header::after {
   content: "";
@@ -511,7 +519,7 @@ button, input, textarea { font: inherit; }
   .login-hero { min-height: 420px; }
 }
 @media (max-width: 640px) {
-  .app-header { position: static; align-items: flex-start; }
+  .app-header { position: fixed; align-items: flex-start; }
   .header-actions { justify-content: flex-start; }
   .page-shell { width: min(100% - 22px, 1680px); min-height: calc(100vh - 76px); margin-top: 16px; padding: 12px; border-radius: 18px; }
   .page-title-row { align-items: flex-start; flex-direction: column; }
@@ -540,7 +548,8 @@ button, input, textarea { font: inherit; }
 .ppt-stage-focus { flex: 1; min-height: 0; aspect-ratio: auto; }
 .ppt-controlbar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding-top: 8px; flex-wrap: wrap; }
 .page-nav { display: flex; align-items: center; gap: 8px; }
-.page-indicator { min-width: 100px; text-align: center; color: var(--ink); font-size: 13px; font-weight: 800; }
+.page-indicator { min-width: 100px; text-align: center; color: var(--ink); font-size: 13px; font-weight: 800; line-height: 1.35; }
+.page-indicator small { display: block; margin-top: 1px; color: var(--ink-soft); font-size: 10px; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; }
 .record-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 5px; padding: 0 6px; border-radius: 99px; background: #e7f4fa; color: var(--primary-strong); font-size: 11px; font-weight: 900; }
 .records-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; height: 100%; min-height: 0; }
 .record-panel { display: flex; flex-direction: column; min-height: 0; }

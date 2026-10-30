@@ -20,4 +20,11 @@ class PromptTemplatesTest {
 
         assertThat(prompt).contains("## 教学目标", "## 重点与难点", "## 知识点提纲");
     }
+
+    @Test
+    void courseQaPromptsRequestPlainText() {
+        assertThat(PromptTemplates.courseQaSystem()).contains("只输出纯文本", "禁止使用 Markdown");
+        assertThat(PromptTemplates.courseQa("测试课程", "什么是重点？", "课程资料"))
+                .contains("只输出纯文本", "不要使用任何 Markdown 特殊语法");
+    }
 }

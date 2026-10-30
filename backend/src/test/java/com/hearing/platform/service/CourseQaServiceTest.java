@@ -15,6 +15,30 @@ class CourseQaServiceTest {
     }
 
     @Test
+    void convertsMarkdownAnswerToPlainText() {
+        String markdown = """
+                # 学习重点
+
+                **光合作用**需要光照、水和二氧化碳。
+
+                - 光照
+                - 水
+                - 二氧化碳
+
+                ```text
+                参考 [S1]
+                ```
+                [查看资料](https://example.com)
+                """;
+
+        String plain = CourseQaService.plainTextAnswer(markdown);
+
+        assertThat(plain)
+                .contains("学习重点", "光合作用需要光照", "• 光照", "参考 [S1]", "查看资料")
+                .doesNotContain("#", "**", "```", "](");
+    }
+
+    @Test
     void scoresRelevantCourseContentHigher() {
         var terms = CourseQaService.queryTerms("光合作用需要什么条件");
 

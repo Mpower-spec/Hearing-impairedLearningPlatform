@@ -111,9 +111,9 @@ public class CourseQaService {
             return mockResponse(question, sources);
         }
         try {
-            String answer = llmClient.chat(PromptTemplates.system(),
+            String answer = llmClient.chat(PromptTemplates.courseQaSystem(),
                     PromptTemplates.courseQa(lesson.getTitle(), question, context.toString()));
-            return new CourseQaResponse(answer, "AI", sources);
+            return new CourseQaResponse(plainTextAnswer(answer), "AI", sources);
         } catch (RuntimeException ex) {
             if ("auto".equals(mode) && properties.isFallbackEnabled()) {
                 log.warn("Course QA failed, using mock fallback: roomId={}, lessonId={}", room.id(), room.lessonId(), ex);
@@ -201,6 +201,30 @@ public class CourseQaService {
             index += term.length();
         }
         return count;
+    }
+
+    /**
+     * 将模型偶尔残留的 Markdown 标记转换为适合直接展示的纯文本。
+     * 保留引用标记 [S1] 等正文信息，只移除展示层语法。
+     */
+    static String plainTextAnswer(String text) {
+        if (text == null || text.isBlank()) return "";
+        String value = text.replace("\r\n", "\n").replace('\r', '\n');
+        value = value.replaceAll("(?m)^\\s*(```|~~~)[\\w-]*\\s*$", "");
+        value = value.replaceAll("(?m)^\\s{0,3}#{1,6}\\s*", "");
+        value = value.replaceAll("(?m)^\\s{0,3}>\\s?", "");
+        value = value.replaceAll("(?m)^\\s*[-*+]\\s+", "• ");
+        value = value.replaceAll("(?m)^\\s*([-*_])\\1{2,}\\s*$", "");
+        value = value.replaceAll("!\\[([^\\]]*)]\\(([^)]+)\\)", "$1（$2）");
+        value = value.replaceAll("\\[([^\\]]+)]\\(([^)]+)\\)", "$1（$2）");
+        value = value.replaceAll("`([^`\\n]+)`", "$1");
+        value = value.replaceAll("(?s)\\*\\*(.*?)\\*\\*", "$1");
+        value = value.replaceAll("(?s)__(.*?)__", "$1");
+        value = value.replaceAll("(?s)~~(.*?)~~", "$1");
+        value = value.replaceAll("(?s)(?<!\\*)\\*([^*\\n]+?)\\*(?!\\*)", "$1");
+        value = value.replaceAll("(?s)(?<!_)_([^_\\n]+?)_(?!_)", "$1");
+        value = value.replace("\\*", "*").replace("\\_", "_").replace("\\#", "#");
+        return value.replaceAll("\\n{3,}", "\n\n").trim();
     }
 
     private static String abbreviate(String value, int max) {

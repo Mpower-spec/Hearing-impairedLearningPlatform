@@ -1,5 +1,5 @@
 <template>
-  <header class="app-header" :class="roleClass">
+  <header ref="headerRef" class="app-header" :class="roleClass">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">声</div>
       <div>
@@ -37,10 +37,11 @@
       <div class="header-context__actions"><slot /></div>
     </div>
   </header>
+  <div class="app-header-spacer" :style="{ height: `${headerHeight}px` }" aria-hidden="true"></div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { session, clearSession, homeForRole } from '../auth/session.js'
 import AccessibilitySettings from './AccessibilitySettings.vue'
@@ -49,6 +50,9 @@ import { avatarState, replayAvatar, retryAvatar, toggleAvatar } from '../avatar/
 
 const route = useRoute()
 const router = useRouter()
+const headerRef = ref(null)
+const headerHeight = ref(78)
+let resizeObserver = null
 const home = computed(() => homeForRole())
 const roleLabel = computed(() => session.user?.role === 'TEACHER' ? '教师' : '学生')
 const roleClass = computed(() => session.user?.role === 'TEACHER' ? 'app-header--teacher' : 'app-header--student')
@@ -57,6 +61,29 @@ function logout() {
   clearSession()
   router.push('/login')
 }
+
+function syncHeaderHeight() {
+  const height = headerRef.value?.getBoundingClientRect().height
+  if (!height) return
+  headerHeight.value = Math.ceil(height)
+  document.documentElement.style.setProperty('--app-header-height', `${headerHeight.value}px`)
+}
+
+onMounted(() => {
+  syncHeaderHeight()
+  if (typeof ResizeObserver !== 'undefined' && headerRef.value) {
+    resizeObserver = new ResizeObserver(syncHeaderHeight)
+    resizeObserver.observe(headerRef.value)
+  }
+  window.addEventListener('resize', syncHeaderHeight)
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  window.removeEventListener('resize', syncHeaderHeight)
+  document.documentElement.style.removeProperty('--app-header-height')
+})
 </script>
 
 <style scoped>
@@ -122,7 +149,6 @@ function logout() {
 @media (max-width: 900px) {
   .header-actions :deep(.sign-avatar-controls) { width: 100%; }
 }
-</style>
 @media (max-width: 767px) {
   .app-header {
     align-items: stretch;
@@ -139,3 +165,4 @@ function logout() {
   .user-chip { padding: 6px 10px; font-size: 12px; }
   .header-logout-button { min-height: 38px !important; }
 }
+</style>

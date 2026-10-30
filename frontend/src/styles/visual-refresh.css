@@ -46,6 +46,12 @@ body {
 }
 
 #app .app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100;
   min-height: 78px;
   color: #f4fcff;
   background:
@@ -1615,7 +1621,12 @@ body {
   #app .ambient-grid { opacity: 0.16 !important; }
 
   #app .app-header {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 100;
     backdrop-filter: none !important;
     box-shadow: 0 8px 22px rgba(2, 20, 33, 0.22);
   }

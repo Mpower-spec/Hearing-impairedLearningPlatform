@@ -3,7 +3,8 @@ package com.hearing.platform.ai;
 /**
  * 提示词模板。
  * 集中定义面向大模型的系统提示与各任务（备课/课堂资料/视频笔记）的用户提示，
- * 统一约束输出为适合听障学生阅读的 Markdown，并对输入长度做截断。
+ * 默认约束输出为适合听障学生阅读的 Markdown；学生课程问答单独使用纯文本输出。
+ * 所有提示词都会对输入长度做截断。
  */
 public final class PromptTemplates {
 
@@ -15,6 +16,13 @@ public final class PromptTemplates {
     public static String system() {
         return "你是一名严谨、耐心的特殊教育学习支持助手。请使用清晰、简洁、适合听障学生阅读的中文，"
                 + "输出完整 Markdown，不要使用代码块包裹整篇结果，不要编造材料中不存在的事实。";
+    }
+
+    // 课程问答系统提示词：课堂问答面向学生即时阅读，统一返回纯文本
+    public static String courseQaSystem() {
+        return "你是一名严谨、耐心的特殊教育学习支持助手。请使用清晰、简洁、适合听障学生阅读的中文。"
+                + "只输出纯文本，禁止使用 Markdown 标记，包括标题符号、加粗或斜体符号、代码块、表格和链接语法。"
+                + "不要编造材料中不存在的事实。";
     }
 
     // 备课资料提示词：要求依据课程 PPT 生成含固定二级标题的备课内容
@@ -85,6 +93,8 @@ public final class PromptTemplates {
                 2. 资料不足时明确说明，不要编造。
                 3. 引用资料时使用 [S1]、[S2] 标记。
                 4. 不要输出资料来源列表，系统会单独展示。
+                5. 只输出纯文本，不要使用任何 Markdown 特殊语法。
+                6. 可使用自然段或普通数字编号组织答案，但不要输出标题符号、加粗符号、代码块或表格。
                 """.formatted(lessonTitle, truncate(question, 500), truncate(context, 6000));
     }
     // 将过长文本截断到指定字符数，并附截断说明，避免超出模型上下文

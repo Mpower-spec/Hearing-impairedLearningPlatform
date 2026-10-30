@@ -47,7 +47,15 @@
       <section class="ppt-focus">
         <PdfStage class="ppt-stage-focus" :source="pdfUrl" :page="page" empty-text="等待教师开始课堂" />
         <div class="ppt-controlbar">
-          <span class="page-indicator">第 {{ page }} / {{ pageCount || 0 }} 页 · 教师控制</span>
+          <div v-if="status === 'ENDED'" class="page-nav" role="group" aria-label="PPT 页码">
+            <el-button :disabled="page <= 1" aria-label="查看上一页 PPT" @click="go(-1)">上一页</el-button>
+            <span class="page-indicator" aria-live="polite">
+              第 {{ page }} / {{ pageCount || 0 }} 页
+              <small>课后可自由翻阅</small>
+            </span>
+            <el-button type="primary" :disabled="page >= pageCount" aria-label="查看下一页 PPT" @click="go(1)">下一页</el-button>
+          </div>
+          <span v-else class="page-indicator">第 {{ page }} / {{ pageCount || 0 }} 页 · 教师控制</span>
           <el-switch v-model="showDanmaku" active-text="弹幕显示" inactive-text="弹幕隐藏" />
           <el-button @click="recordsVisible = true">
             课堂记录
@@ -189,6 +197,7 @@ import { ChatDotRound, Loading } from '@element-plus/icons-vue'
 import AppHeader from '../components/AppHeader.vue'
 import PdfStage from '../components/PdfStage.vue'
 import MarkdownPanel from '../components/MarkdownPanel.vue'
+import { toPlainText } from '../utils/plainText.js'
 
 import http from '../api/http.js'
 import { clearSignCaptions, pushSignCaption } from '../avatar/avatarStore.js'
@@ -233,7 +242,7 @@ async function askQuestion(retry = false) {
   const question = retry ? qaRetryQuestion.value : qaInput.value.trim()
   if (!question || !lessonId.value || qaLoading.value) return
   if (!retry) {
-    qaMessages.value.push({ role: 'user', content: question })
+    qaMessages.value.push({ role: 'user', content: toPlainText(question) })
     qaInput.value = ''
   }
   qaLoading.value = true
@@ -245,9 +254,12 @@ async function askQuestion(retry = false) {
     })
     qaMessages.value.push({
       role: 'assistant',
-      content: result.answer,
+      content: toPlainText(result.answer),
       source: result.source,
-      sources: result.sources || []
+      sources: (result.sources || []).map((source) => ({
+        ...source,
+        excerpt: toPlainText(source.excerpt)
+      }))
     })
     qaRetryQuestion.value = ''
   } catch {
@@ -364,6 +376,12 @@ function send(payload) {
   if (socket?.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(payload))
   }
+}
+
+function go(delta) {
+  const next = page.value + delta
+  if (next < 1 || next > pageCount.value) return
+  page.value = next
 }
 
 function addCaption(item) {

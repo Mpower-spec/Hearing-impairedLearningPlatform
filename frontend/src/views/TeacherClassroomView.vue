@@ -49,10 +49,13 @@
       <section class="ppt-focus">
         <PdfStage class="ppt-stage-focus" :source="pdfUrl" :page="page" empty-text="PDF 加载中" />
         <div class="ppt-controlbar">
-          <div class="page-nav">
-            <el-button :disabled="status !== 'LIVE' || page <= 1" @click="go(-1)">上一页</el-button>
-            <span class="page-indicator">第 {{ page }} / {{ pageCount || 0 }} 页</span>
-            <el-button type="primary" :disabled="status !== 'LIVE' || page >= pageCount" @click="go(1)">下一页</el-button>
+          <div class="page-nav" role="group" aria-label="PPT 页码">
+            <el-button :disabled="(status !== 'LIVE' && status !== 'ENDED') || page <= 1" aria-label="查看上一页 PPT" @click="go(-1)">上一页</el-button>
+            <span class="page-indicator" aria-live="polite">
+              第 {{ page }} / {{ pageCount || 0 }} 页
+              <small v-if="status === 'ENDED'">课后可自由翻阅</small>
+            </span>
+            <el-button type="primary" :disabled="(status !== 'LIVE' && status !== 'ENDED') || page >= pageCount" aria-label="查看下一页 PPT" @click="go(1)">下一页</el-button>
           </div>
           <el-switch v-model="showDanmaku" active-text="弹幕显示" inactive-text="弹幕隐藏" />
           <el-button @click="recordsVisible = true">
@@ -241,7 +244,7 @@ function go(delta) {
   const next = page.value + delta
   if (next < 1 || next > pageCount.value) return
   page.value = next
-  send({ type: 'slide', page: next })
+  if (status.value === 'LIVE') send({ type: 'slide', page: next })
 }
 
 async function copyCode() {
