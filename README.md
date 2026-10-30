@@ -1,679 +1,510 @@
 # 声学无碍学习平台
 
-面向听障学生的无障碍学习平台，围绕“字幕优先、课堂同步、课后复习”构建完整学习闭环。平台包含教师端、学生端、实时课堂、AI 学习资料、视频学习、课程问答、手语数字人、学习社区和移动端响应式界面。
+面向听障学生的无障碍学习平台，围绕“字幕优先、课堂同步、课后复习”提供教师端、学生端、实时课堂、视频学习、AI 学习资料、课程问答、手语数字人和学习社区。
 
-当前版本聚焦可访问性、实时内容和自主学习，不包含注册、账号管理后台和内容运营系统。
+本 README 以**可复现**为首要目标：说明如何从一台干净机器完成依赖安装、环境配置、数据库初始化、服务启动和结果验收。
 
-## 项目定位
+## 目录
 
-平台解决三个核心问题：
+- [复现性声明](#复现性声明)
+- [环境与依赖清单](#环境与依赖清单)
+- [环境变量模板](#环境变量模板)
+- [数据库初始化](#数据库初始化)
+- [极速复现指南](#极速复现指南)
+- [复现验收清单](#复现验收清单)
+- [常见问题排查](#常见问题排查)
+- [已知边界与安全要求](#已知边界与安全要求)
+- [项目结构](#项目结构)
+- [维护约定](#维护约定)
 
-1. **课堂信息可见**：把教师语音转成字幕，并同步 PPT、字幕、弹幕和课堂状态。
-2. **课后内容可复习**：课堂记录、字幕、学习资料和视频笔记长期保留。
-3. **学习差异可支持**：通过字幕设置、手语辅助、AI 问答和文字社区降低学习障碍。
+## 复现性声明
 
-设计原则：
+### 声明等级
 
-- 字幕是核心信息，不依附于声音。
-- 动态效果服务于内容，不干扰阅读。
-- 教师端和学生端使用不同任务布局。
-- AI 输出必须标明来源和降级状态。
-- 无障碍设置优先于装饰性视觉。
+本项目当前达到“**工程可复现，外部能力条件复现**”：
 
-## 核心功能
+- 代码构建、单元测试、后端启动、数据库建表、演示账号登录可以按本文步骤复现。
+- 真实 AI、ASR、浏览器语音识别和手语数字人依赖外部网络、账号、席位及供应商状态，不保证每次输出一致。
+- 本文不承诺在任意操作系统、任意依赖版本下完全一致；请优先使用下方已验证基线。
 
-### 教师端
+### 已验证基线
 
-#### 课程与课件
-
-- 上传 `.pptx` 课程文件。
-- 校验文件扩展名和大小。
-- 通过 LibreOffice 将 PPTX 转换为 PDF。
-- 通过 Apache POI 提取幻灯片文字。
-- 通过 PDFBox 计算 PDF 页数。
-- 课程列表、PDF 预览和课程删除。
-- 删除课程时同步清理课程、课堂、字幕、弹幕、资料和文件。
-
-#### 实时课堂
-
-- 为课程创建课堂房间。
-- 自动生成唯一 6 位数字房间码。
-- 教师切换 PPT 页码后实时广播给学生。
-- 使用 Chrome/Edge Web Speech API 生成教师语音字幕。
-- 提供内置备用字幕输入。
-- 查看学生弹幕。
-- 结束课堂并广播结束状态。
-
-#### 备课与课堂资料
-
-- 根据 PPT 提取文本生成备课资料。
-- 备课资料包含教学目标、重点、术语、练习等结构化内容。
-- 支持重新生成备课资料。
-- 课堂结束后生成课堂学习资料。
-
-### 学生端
-
-#### 加入课堂与课堂记录
-
-- 输入 6 位房间码预览课堂。
-- 加入进行中的课堂并写入成员关系。
-- 查看进行中和已结束课堂记录。
-- 进行中课堂可直接继续进入，无需重复输入邀请码。
-- 已结束课堂可查看字幕、弹幕和课后资料。
-
-#### 课堂学习
-
-- 查看同步 PPT 和页码。
-- 阅读大字号实时字幕。
-- 接收教师最终字幕和课堂弹幕。
-- 发送文字弹幕。
-- 查看历史字幕和弹幕记录。
-- 课堂结束后自行生成或查看学习资料。
-- 在课堂页使用基于当前课程资料的 AI 问答。
-
-#### 视频学习
-
-- 上传 MP4/WebM 视频。
-- 通过 FFmpeg 提取 16kHz 单声道音频。
-- 通过 SiliconFlow `FunAudioLLM/SenseVoiceSmall` 转写。
-- 根据文本长度和视频时长生成估算时间轴 VTT。
-- 使用 HTML5 `<video>` 播放视频和原生字幕。
-- 根据 VTT 时间轴驱动手语数字人。
-- 根据转写文本生成结构化学习笔记。
-- 删除自己的视频及关联文件。
-
-#### 学习社区
-
-- 教师和学生均可发布文字帖子。
-- 分类筛选、关键词搜索和分页。
-- 查看帖子详情和评论。
-- 删除自己发布的帖子或评论。
-- 内容围绕课程问题、学习方法和经验交流。
-
-### AI 能力
-
-- 教师备课资料生成。
-- 课堂学习资料生成。
-- 视频转写与学习笔记生成。
-- 学生课程问答。
-- 课程问答限定为当前课程的 PPT 文本、课堂字幕和课堂学习资料。
-- AI 回答附带引用片段和来源标记。
-- AI 不可用时支持明确标记的模拟降级内容。
-
-### 手语数字人
-
-- 学生端、教师首页和教师实时课堂共用全局单例数字人。
-- 教师首页显示“欢迎老师。祝你工作顺利”手语欢迎语。
-- 页面切换时复用同一个实例。
-- 学生课堂和教师课堂预览中的最终字幕均可驱动手语表达。
-- 视频 VTT 字幕可按时间轴驱动手语表达。
-- 支持欢迎语、重播、隐藏和显示。
-- 数字人字幕队列只保留当前内容和最新待播放内容。
-- 字幕 ID 去重，避免 WebSocket 重连造成重复表达。
-
-## 技术栈
-
-| 层级 | 技术 |
+| 项目 | 本次验证值 |
 | --- | --- |
-| 后端 | Java 17、Spring Boot 3.3.5、Spring WebSocket |
-| 数据访问 | MyBatis-Plus 3.5.9 |
-| 数据库 | MySQL 8.0 |
-| 鉴权 | JWT、BCrypt |
-| PPT 转换 | LibreOffice |
-| PPT 文本 | Apache POI 5.3.0 |
-| PDF 处理 | PDFBox 3.0.3 |
-| 视频处理 | FFmpeg、FFprobe |
-| LLM | SiliconFlow `Qwen/Qwen2.5-72B-Instruct` |
-| ASR | SiliconFlow `FunAudioLLM/SenseVoiceSmall` |
-| 前端 | Vue 3、Vite 6、JavaScript |
-| UI | Element Plus、CSS 变量、原生动画 |
-| PDF 预览 | `vue-pdf-embed` |
-| Markdown | `marked` + `DOMPurify` |
-| 日志 | SLF4J + Logback |
-| 数字人 | `avatar.gbqr.net` 在线 SDK |
+| 验证日期 | 2026-10-30 |
+| 操作系统 | Windows 11 x64 |
+| 代码基线 | 当前工作区；父提交 `a013f17c0d5820b630d34bc0cb26fddf81ce730c` |
+| JDK | OpenJDK 21.0.11（项目编译目标为 Java 17） |
+| Maven | 3.9.16 |
+| Node.js | 24.12.0 |
+| npm | 11.6.2 |
+| MySQL | 8.0.46 |
+| LibreOffice | 26.8.1.1 |
+| FFmpeg | `N-92722-gf22fcd4483` |
+| FFprobe | `2023-02-13-git-2296078397` |
+| 浏览器 | 建议最新版 Chrome 或 Edge |
 
-## 系统架构
+### 本次已执行验证
 
-```text
-浏览器
-├─ Vue 3 前端
-│  ├─ REST API
-│  ├─ 原生 WebSocket
-│  ├─ PDF.js
-│  └─ 手语数字人 SDK
-│
-▼
-Spring Boot
-├─ Controller / WebSocket Handler
-├─ Service
-├─ DAO
-├─ Entity / DTO
-├─ JWT 鉴权
-├─ SiliconFlow Client
-├─ LibreOffice / FFmpeg
-└─ 本地文件存储
-│
-▼
-MySQL 8
-```
-
-后端依赖方向：
-
-```text
-controller/websocket -> service -> dao -> entity
-```
-
-Controller 不直接访问 Mapper，DAO 不依赖业务层。
-
-## 后端分层
-
-```text
-controller/     REST 接口和统一响应
-service/        业务规则、事务和外部服务编排
-dao/            MyBatis-Plus Mapper
-entity/         数据库实体
-dto/            请求与响应模型
-security/       JWT、登录上下文、角色控制
-websocket/      课堂实时消息
-client/         SiliconFlow LLM / ASR
-config/         Spring 配置和初始化
-common/         统一异常和业务异常
-logging/        API 访问日志
-```
-
-## 数据模型
-
-| 表 | 用途 |
-| --- | --- |
-| `app_user` | 用户、角色和 BCrypt 密码哈希 |
-| `lesson` | 课程、PPTX/PDF 路径、PPT 文本和页数 |
-| `room` | 课堂房间、6 位房间码、当前页和状态 |
-| `room_member` | 学生与课堂的加入关系 |
-| `caption` | 教师最终字幕 |
-| `danmaku` | 课堂弹幕 |
-| `material` | 备课资料和课堂学习资料 |
-| `video` | 视频、音频、VTT、转写和笔记 |
-| `community_post` | 社区帖子 |
-| `community_comment` | 社区评论 |
-
-`material` 以 `(lesson_id, type)` 为唯一维度。
-
-## UI 设计
-
-### 视觉方向
-
-界面采用“声音极光”视觉语言：
-
-- 深海蓝、青绿和琥珀色形成主色调。
-- 深色玻璃页头与浅色内容卡片形成层次。
-- 夜空背景包含静态银河、月亮辉光和星点。
-- 桌面端保留流星、极光漂移和更丰富的动态效果。
-- 移动端使用轻量模式，关闭流星、大型模糊动画和持续背景位移。
-- 装饰元素使用 `aria-hidden`，不进入屏幕阅读器和键盘焦点顺序。
-
-### 页头结构
-
-页头分为三个区域：
-
-```text
-品牌区 | 主导航 | 用户与工具区
-```
-
-- 左侧：品牌名称和平台标识。
-- 中间：首页、学习社区。
-- 右侧：手语数字人控制、阅读设置、用户信息和退出登录。
-- 页面附加操作放在第二行快捷操作区域。
-- 页头在路由切换和页面滚动时固定在视口顶部，桌面端和移动端保持一致。
-
-### 首页
-
-首页不使用轮播图，采用仪表盘式结构：
-
-- 主学习台：欢迎信息、核心功能、行动按钮和字幕预览。
-- 功能侧卡：同步课堂、视频学习或 AI 备课。
-- 学习节奏面板：动态声波和辅助视觉。
-- 快捷入口：矩形功能卡，覆盖课程、课堂、视频和社区。
-
-### 教师端布局
-
-三个核心页面使用不同布局：
-
-- **课程资料库**：深青色资料架和课程封面卡片。
-- **课堂指挥台**：深色控制台、实时状态灯、筛选侧栏和横向会话列表。
-- **AI 备课工作室**：暖棕与琥珀色工作台、流程侧栏和横向课程行。
-
-### 学生端布局
-
-- 加入课堂：房间码输入与“我加入的课堂”记录并列呈现。
-- 实时课堂：字幕置顶、PPT 全宽、控制栏在下方。
-- 视频学习：视频播放器、字幕记录和笔记按学习流程排列。
-- 学习社区：文字优先，卡片突出标题、摘要、作者和评论数。
-
-### 响应式设计
-
-| 屏幕宽度 | 布局 |
-| --- | --- |
-| `≤767px` | 手机单列、底部导航、紧凑页头 |
-| `768–1119px` | 平板单列或双列 |
-| `≥1120px` | 桌面多栏和完整动态效果 |
-
-移动端特化：
-
-- 视频、PPT 和表单使用全宽。
-- 评论和发帖弹窗接近全屏。
-- 输入字号不低于 16px。
-- 底部导航使用安全区变量。
-- 卡片滚动揭示、毛玻璃和持续动画被关闭或简化。
-
-### 无障碍阅读设置
-
-支持：
-
-- 字幕字号：28–64px。
-- 字幕行距：1.2–2.0 倍。
-- 高对比度模式。
-- 减少动画。
-- 明亮和深色主题。
-
-设置保存在浏览器 `localStorage` 的 `hp_accessibility_settings_v1` 键中。
-
-核心 CSS 变量：
-
-```text
---caption-font-size
---caption-line-height
---caption-history-font-size
---caption-card-bg
---caption-card-text
---reading-card-bg
---reading-card-border
---reading-card-text
-```
-
-### 视频字幕样式
-
-- 原生 `<track>` 字幕。
-- 背景透明。
-- 白色字体。
-- 多层黑色文字阴影。
-- 不遮挡视频画面。
-
-## 鉴权与权限
-
-- 使用 JWT Bearer Token。
-- 密码使用 BCrypt。
-- 登录后由后端返回用户信息和角色。
-- 前端把 Token 和用户信息保存在浏览器。
-- 请求失效返回 `401`。
-- 角色不足返回 `403`。
-- 教师只能管理自己的课程、课堂和资料。
-- 学生只能访问自己加入过的课堂和属于自己的视频。
-- 课程 AI 问答仅允许房间成员使用。
-
-REST 鉴权头：
-
-```http
-Authorization: Bearer <JWT>
-```
-
-## REST API
-
-所有 `/api/**` 接口使用统一响应：
-
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {}
-}
-```
-
-### 登录
-
-| 方法 | 路径 | 说明 |
+| 验证项 | 命令 | 结果 |
 | --- | --- | --- |
-| `POST` | `/api/auth/login` | 用户名密码登录 |
-| `GET` | `/api/auth/me` | 当前登录用户 |
+| 后端单元测试 | `mvn -q test` | 通过：7 个测试套件、21 个测试、0 失败、0 错误 |
+| 前端生产构建 | `npm run build` | 通过；存在单个 chunk 大于 500 kB 的非阻断警告 |
+| 后端启动 | `mvn -q spring-boot:run` | 通过；监听 `0.0.0.0:8080` |
+| 数据库连接与初始化 | 应用启动时执行 `schema.sql` | 通过 |
+| 教师登录 | `POST /api/auth/login` | HTTP 200，返回 `TEACHER` 和 JWT |
+| 学生登录 | `POST /api/auth/login` | HTTP 200 |
 
-### 课程
+### 尚未在本次复验中覆盖
 
-课程控制器仅教师可访问。
+- 真实 SiliconFlow LLM 与 ASR 调用。
+- PPTX 上传、LibreOffice 转换和 PDF 预览的端到端流程。
+- 视频上传、FFmpeg 抽音频、VTT 时间轴和视频笔记流程。
+- WebSocket 课堂同步、弹幕和断线重连。
+- 手语数字人 SDK 初始化及并发席位行为。
+- 多浏览器、移动端和屏幕阅读器的完整人工验收。
 
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| `GET` | `/api/lessons` | 当前教师课程列表 |
-| `POST` | `/api/lessons` | 上传 PPTX 并创建课程 |
-| `GET` | `/api/lessons/{id}` | 课程详情 |
-| `DELETE` | `/api/lessons/{id}` | 删除自己的课程 |
+这些项目需要额外凭据、媒体样例、浏览器交互或外网访问，结果按“验收清单”逐项确认。
 
-### 课堂
+## 环境与依赖清单
 
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| `POST` | `/api/rooms` | 教师创建课堂 |
-| `GET` | `/api/rooms/mine` | 教师课堂列表 |
-| `GET` | `/api/rooms/joined` | 学生已加入课堂 |
-| `POST` | `/api/rooms/join` | 学生通过房间码加入 |
-| `GET` | `/api/rooms/by-code/{code}` | 按房间码预览课堂 |
-| `GET` | `/api/rooms/{id}` | 课堂详情与权限校验 |
-| `POST` | `/api/rooms/{id}/end` | 教师结束课堂 |
-| `GET` | `/api/rooms/{id}/captions` | 字幕历史 |
-| `GET` | `/api/rooms/{id}/danmaku` | 弹幕历史 |
+### 必需软件
 
-学生加入请求：
-
-```json
-{
-  "roomCode": "131728"
-}
-```
-
-### AI 与资料
-
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| `POST` | `/api/ai/prepare/{lessonId}` | 生成备课资料 |
-| `POST` | `/api/ai/material/{lessonId}` | 生成课堂学习资料 |
-| `POST` | `/api/ai/transcribe/{videoId}` | 视频转写和 VTT |
-| `POST` | `/api/ai/note/{videoId}` | 生成视频笔记 |
-| `GET` | `/api/materials/prepare/{lessonId}` | 查询备课资料 |
-| `GET` | `/api/materials/class/{lessonId}` | 查询课堂资料 |
-| `POST` | `/api/course-qa/ask` | 课程 AI 问答 |
-
-课程问答请求：
-
-```json
-{
-  "roomId": 27,
-  "question": "这节课的重点是什么？"
-}
-```
-
-课程问答返回：
-
-```json
-{
-  "answer": "根据课堂资料，重点是……[S1]",
-  "source": "AI",
-  "sources": [
-    {
-      "type": "CAPTION",
-      "label": "课堂字幕",
-      "excerpt": "相关字幕片段"
-    }
-  ]
-}
-```
-
-来源类型包括：
-
-- `AI`：真实 LLM 回答。
-- `MOCK`：明确标记的模拟回答。
-- `LOCAL`：本地检索结果。
-
-### 视频
-
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| `GET` | `/api/videos` | 当前学生视频列表 |
-| `POST` | `/api/videos` | 上传 MP4/WebM |
-| `GET` | `/api/videos/{id}` | 视频详情 |
-| `DELETE` | `/api/videos/{id}` | 删除自己的视频 |
-
-### 社区
-
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| `GET` | `/api/community/posts` | 帖子列表、分类、搜索、分页 |
-| `POST` | `/api/community/posts` | 发布帖子 |
-| `GET` | `/api/community/posts/{id}` | 帖子详情 |
-| `DELETE` | `/api/community/posts/{id}` | 删除自己的帖子 |
-| `POST` | `/api/community/posts/{id}/comments` | 发表评论 |
-| `DELETE` | `/api/community/comments/{id}` | 删除自己的评论 |
-
-### 文件
-
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| `GET` | `/files/**` | PDF、视频、音频等文件 |
-| `GET` | `/files/vtt/{filename}` | 以 `text/vtt` 返回字幕 |
-
-## WebSocket 实时课堂
-
-连接地址：
-
-```text
-/ws/classroom?token=<JWT>
-```
-
-服务端验证：
-
-- JWT 是否有效
-- 用户角色
-- 房间状态
-- 课程和课堂归属
-- 学生成员关系
-
-### 客户端消息
-
-| `type` | 发送者 | 主要字段 | 说明 |
+| 组件 | 最低要求 | 已验证版本 | 用途 |
 | --- | --- | --- | --- |
-| `join` | 教师/学生 | `roomCode` | 加入课堂 |
-| `slide` | 教师 | `page` | 切换 PPT 页码 |
-| `caption` | 教师 | `text` | 保存并广播最终字幕 |
-| `danmaku` | 教师/学生 | `content` | 保存并广播弹幕 |
-| `end` | 教师 | 无 | 结束课堂 |
-| `ping` | 教师/学生 | 无 | 心跳 |
+| Git | 任意近期版本 | 2.54.0 | 获取代码 |
+| JDK | 17+ | 21.0.11 | 后端编译与运行 |
+| Maven | 3.9+ | 3.9.16 | 后端依赖与测试 |
+| Node.js | 20+，推荐 22 LTS | 24.12.0 | 前端构建 |
+| npm | 10+ | 11.6.2 | 前端依赖安装 |
+| MySQL | 8.0.x | 8.0.46 | 业务数据库 |
+| Chrome/Edge | 最新版 | 未固定 | 前端、麦克风和 Web Speech API |
 
-### 服务端消息
+### 按功能启用的依赖
 
-| `type` | 主要字段 | 说明 |
+| 组件 | 启用功能 | 说明 |
 | --- | --- | --- |
-| `state` | 课程、房间、页码、页数、PDF、状态 | 完整课堂状态 |
-| `slide` | `page` | 同步翻页 |
-| `caption` | `id`、`text`、`createdAt` | 新最终字幕 |
-| `danmaku` | `id`、`content`、`userName`、`createdAt` | 新弹幕 |
-| `end` | 无 | 课堂结束 |
-| `pong` | 无 | 心跳响应 |
-| `error` | `message` | 错误提示 |
+| LibreOffice | PPTX 转 PDF、PPT 文本提取前置条件 | 不安装时课程上传流程不可用 |
+| FFmpeg | 视频抽取 16 kHz 单声道音频 | `FFMPEG_PATH` 必须可执行 |
+| FFprobe | 读取视频时长 | `FFPROBE_PATH` 必须可执行 |
+| SiliconFlow API Key | 真实 LLM 与 ASR | 无 Key 时可使用 `AI_MODE=mock` 演示 |
+| 手语数字人账号 | 在线数字人 | 通过 `VITE_SIGN_AVATAR_ACCOUNT` 配置；缺失时不阻断主流程 |
+| 外网访问 | AI、ASR、数字人、依赖下载 | 需要访问 Maven/npm 仓库及供应商域名 |
 
-权限规则：
+建议版本安装完成后执行：
 
-- 只有教师可以翻页、发送最终字幕和结束课堂。
-- 教师和学生可以发送弹幕。
-- 学生发送翻页、字幕或结束消息会被拒绝。
-- 所有广播严格按房间隔离。
-
-## AI 与媒体流程
-
-### PPTX 转 PDF
-
-```text
-上传 PPTX
-  -> 校验扩展名和大小
-  -> UUID 文件名保存
-  -> LibreOffice 转 PDF
-  -> POI 提取文本
-  -> PDFBox 计算页数
-  -> 保存课程
+```powershell
+java -version
+mvn -version
+node --version
+npm --version
+mysql --version
 ```
 
-### 视频字幕
+若 LibreOffice、FFmpeg 或 FFprobe 不在 `PATH` 中，请继续在环境变量模板里填写绝对路径。
 
-```text
-上传 MP4/WebM
-  -> FFmpeg 提取 16kHz 单声道音频
-  -> SenseVoice 转写
-  -> 按句长和视频时长估算 VTT 时间轴
-  -> HTML5 video 加载 VTT
-  -> 字幕驱动手语数字人
-```
+### 依赖锁定
 
-SenseVoice 当前返回整段文本，因此 VTT 时间轴为估算值，不是逐词时间戳。
+- 后端依赖版本由 `backend/pom.xml` 和 Spring Boot 3.3.5 BOM 管理。
+- 前端依赖由 `frontend/package-lock.json` 锁定；请使用 `npm ci`，不要使用无锁安装。
+- 仓库不包含 `node_modules`、Maven 缓存、LibreOffice、FFmpeg 等本地运行工具。
+- 仓库中的 `tools/` 是本机运行时和调试资料目录，已被 Git 忽略，不属于可克隆依赖。
 
-### 课程问答检索
+### 端口与网络
 
-```text
-问题
-  -> 提取中文双字词和英文词
-  -> 从 PPT、课堂字幕、课堂资料中切块
-  -> 关键词命中评分
-  -> 选择最多 5 个相关片段
-  -> 构造 Prompt
-  -> LLM 回答
-  -> 返回引用来源
-```
-
-当前不使用 Embedding、向量数据库或全文检索中间件。
-
-### AI 运行模式
-
-| 模式 | 行为 |
+| 地址/端口 | 用途 |
 | --- | --- |
-| `real` | 只使用真实接口，失败直接报错 |
-| `auto` | 优先真实接口，失败时使用明确标记的本地兜底内容 |
-| `mock` | 不调用远程 AI，直接生成本地兜底内容 |
+| `localhost:3306` | MySQL 默认端口 |
+| `localhost:8080` | Spring Boot REST、WebSocket、文件访问 |
+| `localhost:5173` | Vite 开发服务器 |
+| `https://api.siliconflow.cn` | SiliconFlow LLM/ASR |
+| `https://avatar.gbqr.net` | 手语数字人 SDK |
+| `https://api.gbqr.net` | 手语数字人接口，具体域名以 SDK 请求为准 |
 
-AI 回答不记录到数据库；课程问答历史只保留在当前页面会话内。
+浏览器麦克风和手语数字人依赖安全上下文，请使用 `http://localhost:5173` 或 HTTPS。不要通过局域网 HTTP 地址测试教师麦克风。
 
-## 安全与隐私注意事项
+## 环境变量模板
 
-### 安全上下文
+项目不是通过根目录 `.env` 启动，而是分别读取后端 Java Properties 和前端 Vite 环境变量。不要提交真实密钥。
 
-以下能力依赖安全上下文：
+### 后端：`backend/config/local.properties`
 
-- 浏览器麦克风
-- Web Speech API
-- 手语数字人 SDK
+先复制模板：
 
-非安全页面可能出现麦克风禁止、SDK 初始化超时或 WebGL 资源无法进入动作服务。
+```powershell
+Copy-Item backend/config/local.properties.example backend/config/local.properties
+```
 
-### 手语数字人
+完整模板如下：
 
-- 在线 SDK 依赖 `avatar.gbqr.net`、`api.gbqr.net` 和 WebSocket。
-- 当前账号存在并发席位限制。
-- 多学生同时使用需要多席位授权或集中渲染方案。
-- 数字人失败不能阻断字幕、视频和课堂主流程。
-- 隐藏或离开课堂时应取消当前手语表达并清空队列。
+```properties
+# ===== 数据库 =====
+DB_URL=jdbc:mysql://localhost:3306/hearing_platform?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+DB_USERNAME=root
+DB_PASSWORD=change-me
 
-### 浏览器语音识别
+# ===== 鉴权 =====
+# 至少 32 字节，生产环境必须替换为随机值
+JWT_SECRET=replace-with-at-least-32-random-characters
+JWT_EXPIRATION_HOURS=8
 
-- Web Speech API 主要支持 Chrome/Edge。
-- 依赖浏览器版本和网络环境。
-- 识别结果和延迟不可控。
-- 浏览器不支持时必须有备用字幕输入。
+# ===== AI 与 ASR =====
+# auto：优先真实接口，失败后降级
+# real：只使用真实接口，失败即报错
+# mock：不访问远程 AI，直接使用明确标记的模拟内容
+AI_MODE=auto
+AI_FALLBACK_ENABLED=true
+SILICONFLOW_API_KEY=
+SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+SILICONFLOW_LLM_MODEL=Qwen/Qwen2.5-72B-Instruct
+SILICONFLOW_ASR_MODEL=FunAudioLLM/SenseVoiceSmall
 
-### AI 输出
+# ===== 本地工具 =====
+# Windows 默认安装示例；使用便携版时改为实际绝对路径
+LIBREOFFICE_PATH=C:/Program Files/LibreOffice/program/soffice.exe
+FFMPEG_PATH=ffmpeg
+FFPROBE_PATH=ffprobe
 
-- AI 回答只作为学习辅助，不应替代课程原文。
-- 资料不足时应明确说明，不应编造。
-- 回答必须保留来源标记。
-- 模拟内容必须显示 `MOCK` 或同等提示。
+# ===== 运行目录与端口 =====
+# 相对路径以启动后端时的工作目录为基准
+UPLOAD_ROOT=./uploads
+LOG_PATH=./logs
+SERVER_PORT=8080
+```
 
-### 文件访问
+说明：
 
-当前 `/files/**` 使用不可预测的 UUID 文件名，但没有额外业务鉴权。涉及敏感课程、视频或录音时，需要增加签名 URL、登录校验或对象存储私有读权限。
+- 最快演示可将 `AI_MODE` 改为 `mock`，此时不要求配置 `SILICONFLOW_API_KEY`。
+- `auto` 或 `real` 模式需要有效 Key、网络和供应商额度。
+- `JWT_SECRET` 少于 32 字节时后端会拒绝启动。
+- 若使用 Linux/macOS，`LIBREOFFICE_PATH` 可设为 `soffice`，前提是该命令在 `PATH` 中。
+- 环境变量与 `local.properties` 同名时，进程环境变量优先。
 
-### 视频时间轴
+### 前端：`frontend/.env.local`
 
-- VTT 时间轴根据句长和视频总时长估算。
-- 不保证逐词同步。
-- 长句被切分后，字幕结束时间可能存在偏差。
-- 手语动画速度由 SDK 决定，不保证与字幕完全同步。
+```powershell
+Copy-Item frontend/.env.example frontend/.env.local
+```
 
-### 移动端性能
+```dotenv
+# 手语数字人 SDK 账号；留空时数字人功能降级，但训练/课堂主流程仍可运行
+VITE_SIGN_AVATAR_ACCOUNT=your_sdk_account
+```
 
-- 手机端关闭流星、大型模糊动画、持续背景位移和滚动揭示。
-- PC 端保留完整视觉动效。
-- 减少动画设置会进一步降低动态效果。
-- 高对比度模式会隐藏纯装饰背景。
+注意：
 
-### 数据与隐私
+- `VITE_*` 在 Vite 启动或构建时注入，修改后必须重启开发服务器或重新构建。
+- 前端 API、文件和 WebSocket 代理目标当前固定为 `http://localhost:8080` / `ws://localhost:8080`，见 `frontend/vite.config.js`。若修改后端端口，需同步修改代理配置。
+- 生产部署时应通过同源反向代理提供 `/api`、`/files` 和 `/ws`，并配置 HTTPS。
 
-- 课堂字幕、弹幕和视频内容可能包含学习隐私。
-- 录音和上传前应获得参与者知情同意。
+### 变量一览
+
+| 变量 | 必需 | 默认值 | 作用 |
+| --- | --- | --- | --- |
+| `DB_URL` | 否 | 本机 `hearing_platform` JDBC URL | 数据库连接 |
+| `DB_USERNAME` | 是 | `root` | 数据库用户名 |
+| `DB_PASSWORD` | 是 | 空 | 数据库密码 |
+| `JWT_SECRET` | 是 | 仅演示用固定值 | JWT 签名密钥，至少 32 字节 |
+| `JWT_EXPIRATION_HOURS` | 否 | `8` | Token 有效期 |
+| `AI_MODE` | 否 | `auto` | `auto` / `real` / `mock` |
+| `AI_FALLBACK_ENABLED` | 否 | `true` | 真实 AI 失败时是否降级 |
+| `SILICONFLOW_API_KEY` | 条件 | 空 | 真实 LLM/ASR 凭据 |
+| `SILICONFLOW_BASE_URL` | 否 | SiliconFlow 官方地址 | API 基础地址 |
+| `SILICONFLOW_LLM_MODEL` | 否 | `Qwen/Qwen2.5-72B-Instruct` | 文本模型 |
+| `SILICONFLOW_ASR_MODEL` | 否 | `FunAudioLLM/SenseVoiceSmall` | 语音转写模型 |
+| `LIBREOFFICE_PATH` | PPT 功能必需 | Windows 安装路径 | PPTX 转 PDF |
+| `FFMPEG_PATH` | 视频功能必需 | `ffmpeg` | 音频抽取 |
+| `FFPROBE_PATH` | 视频功能必需 | `ffprobe` | 媒体时长读取 |
+| `UPLOAD_ROOT` | 否 | `./uploads` | 上传文件根目录 |
+| `LOG_PATH` | 否 | `./logs` | 日志目录 |
+| `SERVER_PORT` | 否 | `8080` | 后端端口 |
+| `VITE_SIGN_AVATAR_ACCOUNT` | 数字人功能必需 | 空 | 数字人 SDK 账号 |
+
+## 数据库初始化
+
+### 自动初始化
+
+默认 JDBC URL 包含 `createDatabaseIfNotExist=true`，且 Spring 配置为：
+
+```yaml
+spring:
+  sql:
+    init:
+      mode: always
+```
+
+因此数据库账号具备建库权限时，首次启动会自动创建 `hearing_platform` 并执行 `backend/src/main/resources/schema.sql`。
+
+### 手动初始化
+
+若数据库账号无建库权限，先由管理员执行：
+
+```sql
+CREATE DATABASE IF NOT EXISTS hearing_platform
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+```
+
+随后启动后端，`schema.sql` 仍会自动建表。也可手动执行：
+
+```sql
+USE hearing_platform;
+SOURCE D:/Hearing-impairedLearningPlatform/backend/src/main/resources/schema.sql;
+```
+
+注意将路径替换为实际绝对路径，MySQL `SOURCE` 使用正斜杠更稳妥。
+
+### 演示账号
+
+后端启动后，`DataInitializer` 会幂等写入以下账号：
+
+| 角色 | 用户名 | 密码 | 显示名称 |
+| --- | --- | --- | --- |
+| 教师 | `teacher` | `123456` | 演示教师 |
+| 学生 | `student` | `123456` | 演示学生 |
+
+账号仅在不存在时创建，不会在每次启动时重置密码。演示账号只允许用于本地开发。
+
+### 重置本地数据库
+
+> 警告：以下命令会删除全部本地业务数据，仅用于确认可重复初始化。
+
+```sql
+DROP DATABASE IF EXISTS hearing_platform;
+CREATE DATABASE hearing_platform
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+```
+
+然后重启后端，表结构和演示账号会重新生成。
+
+## 极速复现指南
+
+以下步骤适用于已经安装“必需软件”的 Windows 环境。首次下载 Maven/npm 依赖时需要外网访问。
+
+### 1. 获取代码并进入目录
+
+```powershell
+git clone <repository-url>
+cd Hearing-impairedLearningPlatform
+```
+
+### 2. 创建本地配置
+
+```powershell
+Copy-Item backend/config/local.properties.example backend/config/local.properties
+Copy-Item frontend/.env.example frontend/.env.local
+```
+
+按“环境变量模板”填写：
+
+- 至少配置 `DB_USERNAME`、`DB_PASSWORD`、`JWT_SECRET`。
+- 无 SiliconFlow Key 时设置 `AI_MODE=mock`。
+- 安装 LibreOffice 和 FFmpeg 后填写实际路径，或确保命令在 `PATH` 中。
+- 数字人账号可暂不填写，不影响登录、课堂和视频基础流程。
+
+### 3. 启动 MySQL
+
+确保 MySQL 8.0 正在监听 `3306`，并使用配置中的账号密码可以连接。
+
+```powershell
+Get-NetTCPConnection -LocalPort 3306 -State Listen
+```
+
+### 4. 启动后端
+
+打开终端 A：
+
+```powershell
+cd backend
+mvn spring-boot:run
+```
+
+成功标志：
+
+```text
+Tomcat started on port 8080
+Started HearingPlatformApplication
+```
+
+### 5. 启动前端
+
+打开终端 B：
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+浏览器访问：
+
+```text
+http://localhost:5173
+```
+
+### 6. 登录
+
+| 角色 | 用户名 | 密码 |
+| --- | --- | --- |
+| 教师 | `teacher` | `123456` |
+| 学生 | `student` | `123456` |
+
+### 7. 停止服务
+
+在后端和前端终端分别按 `Ctrl+C`。
+
+## 复现验收清单
+
+### 构建与启动
+
+- [ ] `java -version` 显示 JDK 17 或更高版本。
+- [ ] `mvn -version` 显示 Maven 3.9 或更高版本。
+- [ ] `node --version` 显示 Node.js 20 或更高版本。
+- [ ] MySQL 8.0 正在监听 `3306`。
+- [ ] `cd backend && mvn -q test` 成功。
+- [ ] `cd frontend && npm ci && npm run build` 成功。
+- [ ] 后端启动后监听 `8080`。
+- [ ] 前端启动后监听 `5173`。
+- [ ] `hearing_platform` 数据库中存在业务表和演示账号。
+
+### API 冒烟测试
+
+PowerShell：
+
+```powershell
+$body = @{ username = 'teacher'; password = '123456' } | ConvertTo-Json
+$response = Invoke-RestMethod `
+  -Method Post `
+  -Uri 'http://localhost:8080/api/auth/login' `
+  -ContentType 'application/json' `
+  -Body $body
+$response.code
+$response.data.user.role
+```
+
+预期输出：
+
+```text
+200
+TEACHER
+```
+
+curl：
+
+```bash
+curl -sS http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"student","password":"123456"}'
+```
+
+预期返回 `code: 200`、`role: STUDENT` 和 JWT。
+
+### 核心功能人工验收
+
+- [ ] 教师登录后可进入课程资料库。
+- [ ] 教师上传 `.pptx` 后生成 PDF，并可预览和翻页。
+- [ ] AI 为 `mock` 时，备课资料显示模拟来源标记，课堂主流程不中断。
+- [ ] 教师创建课堂后获得 6 位房间码。
+- [ ] 学生输入房间码后可加入并查看同步 PPT 与字幕。
+- [ ] 教师发送演示字幕或使用浏览器语音识别后，学生端同步显示。
+- [ ] 教师和学生可发送弹幕，历史记录可回看。
+- [ ] 学生上传 MP4/WebM 后，在 FFmpeg、ASR 或 mock 降级路径下可查看字幕/笔记。
+- [ ] 社区可发帖、搜索、筛选、评论，并仅允许作者删除自己的内容。
+- [ ] 课程问答返回答案、来源标记和引用片段。
+- [ ] 页面刷新后登录态仍存在；Token 失效时返回登录页。
+- [ ] 移动端无横向溢出，字幕字号、高对比度和减少动画设置生效。
+
+### 外部服务专项验收
+
+- [ ] 使用有效 `SILICONFLOW_API_KEY` 且 `AI_MODE=real` 时，备课/问答/转写接口成功。
+- [ ] 使用错误 Key 且 `AI_MODE=auto` 时，返回明确标记的降级内容。
+- [ ] 配置 `VITE_SIGN_AVATAR_ACCOUNT` 后，数字人初始化、播报、重播、隐藏和恢复可用。
+- [ ] 微信/Edge/Chrome 麦克风授权仅在 `localhost` 或 HTTPS 下测试。
+- [ ] 多学生并发数字人测试时确认账号席位上限。
+
+## 常见问题排查
+
+| 现象 | 可能原因 | 处理方式 |
+| --- | --- | --- |
+| `Communications link failure` | MySQL 未启动、端口不对、防火墙拦截 | 启动 MySQL，确认 `3306` 和 `DB_URL` |
+| `Access denied for user` | 数据库用户名/密码错误 | 修正 `DB_USERNAME`、`DB_PASSWORD` |
+| 建库失败 | 账号无 `CREATE DATABASE` 权限 | 由管理员预建数据库，或授予权限 |
+| 表不存在 | `schema.sql` 未执行或初始化失败 | 检查启动日志和 `spring.sql.init.mode` |
+| `JWT_SECRET must contain at least 32 bytes` | JWT 密钥过短 | 替换为至少 32 字节的随机字符串 |
+| PPTX 上传失败 | LibreOffice 路径错误或不可执行 | 执行 `soffice --version`，填写绝对路径 |
+| `ffmpeg`/`ffprobe` 找不到 | 未安装或不在 `PATH` | 填写 `FFMPEG_PATH`、`FFPROBE_PATH` 绝对路径 |
+| 麦克风无法授权 | 使用了局域网 HTTP 或浏览器不支持 | 使用 `http://localhost:5173` 或 HTTPS，优先 Chrome/Edge |
+| WebSocket 无法连接 | 后端未启动、代理配置错误、端口不一致 | 确认后端 `8080`，重启 Vite，检查浏览器网络面板 |
+| AI 接口返回 503 | Key 缺失、余额不足、网络失败 | 检查 Key 和网络；演示时使用 `AI_MODE=mock` |
+| AI 输出每次不同 | 真实 LLM 非确定性 | 验收结构、引用和业务行为，不比对逐字文本 |
+| 数字人初始化失败 | 账号缺失、非安全上下文、外网或席位问题 | 检查 `VITE_SIGN_AVATAR_ACCOUNT`，使用 localhost/HTTPS，重试 |
+| `npm ci` 失败 | Node 版本不符、代理或缓存损坏 | 使用 Node 20+，检查 npm registry，清理缓存后重试 |
+| 端口被占用 | `8080` 或 `5173` 已有进程 | 停止占用进程，或同步修改后端与 Vite 代理端口 |
+| 前端构建提示 chunk 过大 | PDF.js/Element Plus 体积较大 | 当前为非阻断警告；可后续做代码分割 |
+
+## 已知边界与安全要求
+
+### 可复现边界
+
+- 真实 AI、ASR 和数字人的可用性、延迟、文本结果与供应商账号状态相关。
+- 浏览器 Web Speech API 的识别结果、标点和延迟由浏览器和网络决定。
+- 视频 VTT 时间轴按文本长度和时长估算，不是逐词对齐。
+- 手语数字人动画速度由在线 SDK 决定，不保证与字幕完全同步。
+- 前端生产构建存在大 chunk 警告，不影响当前构建成功。
+
+### 安全要求
+
+- `backend/config/local.properties`、`frontend/.env.local` 和真实密钥不得提交到 Git。
+- 默认演示密码 `123456` 仅用于本地测试；公开部署前必须替换。
+- 生产环境必须设置强随机 `JWT_SECRET` 并启用 HTTPS。
+- `/files/**` 当前没有业务鉴权；敏感课程、视频和录音应增加签名 URL、登录校验或私有对象存储。
+- CORS 当前只放行本地和少量内网来源；部署到新域名时需修改 `WebConfig`。
+- 录音、字幕、弹幕和视频上传前应获得参与者知情同意。
 - 日志不得记录密码、JWT、API Key、字幕正文和弹幕正文。
-- 本地配置和真实账号不得提交到 Git。
+- 当前不支持注册、找回密码、账号管理后台和跨教师协作，不应按多租户生产系统部署。
 
-## 当前限制
+## 项目结构
 
-- 不支持用户注册、找回密码和账号管理后台。
-- 不支持教师跨账号协作。
-- 不支持 PPT 动画、内嵌视频和复杂版式还原。
-- 不支持视频转码、HLS 和对象存储。
-- 社区仅支持文字帖子、评论、分类、搜索和分页。
-- 不支持图片、附件、点赞、私信和内容审核后台。
-- 课程问答不支持跨课程资料。
-- 课程问答不保存聊天历史。
-- 手语数字人不支持自定义离线模型和词元库。
-- 单数字人账号不能保证多学生并发使用。
-- 实时字幕依赖教师端浏览器和网络。
-- AI 和 ASR 服务不可用时会进入降级流程。
-
-## 后续改进方向
-
-### 实时字幕
-
-1. 接入服务端流式 ASR，例如 FunASR Streaming Paraformer。
-2. 用 AudioWorklet 采集 16kHz PCM 音频。
-3. 增加 VAD、自动标点、课程热词和句级时间戳。
-4. 建立“云端 ASR → Web Speech → 手动字幕”三层降级。
-5. 支持教师修正最终字幕。
-6. 支持字幕搜索、复制和导出 TXT/VTT。
-7. 支持课堂结束后按时间点定位 PPT 页码。
-
-### 手语数字人
-
-1. 抽象数字人 Provider 接口，减少对单一 SDK 的耦合。
-2. 建立账号池或席位租约，控制并发占用。
-3. 评估集中渲染后通过 WebRTC/HLS 分发的方案。
-4. 为视频学习预生成并缓存手语片段。
-5. 建立课程术语和手语词元映射。
-6. 数字人不可用时提供稳定的文字和静态辅助方案。
-7. 增加模型资源缓存、连接状态和自动恢复。
-
-### AI 能力
-
-1. 引入 Embedding 或向量检索，提高长课程问答召回率。
-2. 增加资料充分性判断，减少无依据回答。
-3. 支持重新生成、引用片段跳转和来源高亮。
-4. 增加课程摘要、思维导图、错题和复习计划。
-5. 增加 AI 请求取消、超时和并发限制。
-
-### 学习闭环
-
-1. 首页展示进行中课堂、最近课堂、最近视频和待复习内容。
-2. 增加知识卡片、错题本和间隔重复。
-3. 支持视频字幕点击跳转。
-4. 支持笔记与时间点、字幕和 PPT 页面关联。
-5. 支持学习进度、连续学习和掌握度展示。
-
-### 社区与协作
-
-1. 增加学习小组和共同学习计划。
-2. 增加举报、屏蔽和内容审核机制。
-3. 增加收藏、关注和最佳答案。
-4. 增加帖子附件和学习资料分享。
-
-### 工程质量
-
-1. 引入 Flyway 或 Liquibase 管理数据库迁移。
-2. 增加 Playwright 端到端测试。
-3. 增加 WebSocket 集成测试和断线恢复测试。
-4. 增加数据库备份、上传文件清理和存储生命周期管理。
-5. 增加健康检查、AI 调用耗时和失败率指标。
-6. 对 PDF.js、Element Plus 和主包进行代码分割。
-7. 增加文件访问鉴权和私有对象存储。
+```text
+Hearing-impairedLearningPlatform/
+├─ backend/                    Spring Boot 后端
+│  ├─ config/
+│  │  └─ local.properties.example
+│  ├─ src/main/java/           Controller、Service、DAO、WebSocket、AI Client
+│  ├─ src/main/resources/
+│  │  ├─ application.yml
+│  │  ├─ schema.sql
+│  │  └─ logback-spring.xml
+│  └─ pom.xml
+├─ frontend/                   Vue 3 + Vite 前端
+│  ├─ src/
+│  ├─ .env.example
+│  ├─ package.json
+│  └─ package-lock.json
+├─ docs/                       功能设计与实现记录
+├─ tools/                      本机工具和调试资料，Git 忽略
+├─ uploads/                    运行时上传目录，Git 忽略
+├─ logs/                       运行时日志目录，Git 忽略
+└─ README.md
+```
 
 ## 维护约定
 
-每次新增功能、修改接口、调整架构、改变配置或进行重要 UI 改动时，必须同步更新 README。
+每次修改功能、接口、架构、依赖或配置时，至少同步完成：
 
-提交前至少检查：
+1. 更新本 README 的依赖、变量、启动或验收步骤。
+2. 运行 `mvn -q test` 和 `npm run build`。
+3. 使用演示教师和学生账号完成登录与受影响流程冒烟测试。
+4. 确认新增配置有模板但真实值未提交。
+5. 确认前端、后端端口和 Vite 代理配置一致。
+6. 确认 README 中的“已验证基线”仍与当前代码状态一致。
 
-- 前后端接口字段一致。
-- 教师和学生权限正确。
-- 移动端没有横向溢出。
-- 减少动画和高对比度设置仍然有效。
-- 日志不包含敏感信息。
-- 新增文件、接口、消息类型和限制已写入文档。
+提交前检查：
+
+```powershell
+git status --short
+git diff --check
+```
+
+若复现基线发生变化，应更新验证日期、提交号、依赖版本和验证结果，不能继续沿用旧声明。
