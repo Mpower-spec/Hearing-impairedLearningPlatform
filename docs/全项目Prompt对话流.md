@@ -1,8 +1,9 @@
 # 听障学习平台全项目 Prompt 对话流（原生记录）
 
 > 导出日期：2026-10-30
+> 最近补充：2026-10-31
 > 数据来源：Codex 本机原生 JSONL 会话记录
-> 导出范围：本项目主会话与 6 个相关专题会话
+> 导出范围：本项目主会话与 6 个相关专题会话；包含 2026-10-31 当前会话补充
 > 记录规则：仅导出用户原始 Prompt 与 assistant 最终回复；不包含 commentary、工具调用、内部推理或隐藏思维链。
 > 安全处理：密码、API Key、SDK 账号、JWT、服务器 IP 等敏感值已脱敏。
 > 完整轮次：仅包含至少存在一条最终回复的轮次；被中断且没有最终回复的轮次不会伪造内容。
@@ -13619,5 +13620,182 @@ hearder标签固定，在进行路由跳转后，依然锁定在页面上方。�
 - `tools/ssh/` 下存在部署私钥，部署包中也包含实际凭据。目前都被 `.gitignore` 忽略、未进入 Git，但不要随源码包、备份或聊天工具外发；若曾分享，应轮换密钥和 JWT/API Key。
 
 建议下一步先处理三项：**移除默认 JWT 密钥与固定教师账号、启用 HTTPS、给 `/files/**` 加权限控制**，然后再修视频转写事务/异步任务和 WebSocket 重连同步。
+
+---
+
+# 数字人容器竞态与外部鉴权排查（2026-10-31 补充）
+
+---
+
+# Turn 190：不需要把 tools 上传远程仓库吗
+
+### 我的 Prompt
+
+不需要把"D:\Hearing-impairedLearningPlatform\tools"上传远程厂库吗
+
+### codex 回复
+
+不需要把整个 `tools/` 上传到远程仓库。`.gitignore` 已忽略该目录，README 也说明它是本机运行时和调试资料目录。
+
+- 不提交：`tools/libreoffice/`、`tools/linux-x64/`、`tools/node_modules/`、部署包和 ZIP。
+- 绝对不能提交：`tools/ssh/` 私钥、部署环境配置和真实密钥。
+- 可考虑提交：较小的调试/验证脚本，但建议迁移到 `scripts/` 或 `tests/manual/` 后再入库。
+- 部署包应使用 GitHub Releases、内部制品库或网盘，不放源码仓库。
+
+---
+
+# Turn 191：提交 docs 目录
+
+### 我的 Prompt
+
+待提交的是 `docs/` 目录。  提交
+
+### codex 回复
+
+已提交 `docs/` 目录：
+
+- 提交：`2742b79 docs: add project prompt design records`
+- 文件：6 个
+- 变更：19,064 行新增
+- 工作区：干净
+- 分支：`test002`，领先 `origin/test002` 1 个提交
+
+当时尚未推送到远程仓库。
+
+---
+
+# Turn 192：在 README 中补充已验证工具下载地址
+
+### 我的 Prompt
+
+我需要你在readme.md中给出当前本机验证通过的tools下载地址（ffmpeg等必要下载资源）
+
+### codex 回复
+
+已在 README 中新增“已验证工具下载地址（Windows 11 x64）”，包含：
+
+- Git、Dragonwell JDK、Maven、Node.js、MySQL
+- LibreOffice 26.8.1.1
+- FFmpeg、FFprobe 的锁定下载包
+- Chrome/Edge 下载入口
+- FFmpeg/FFprobe 二进制 SHA256
+- `LIBREOFFICE_PATH`、`FFMPEG_PATH`、`FFPROBE_PATH` 配置示例
+
+下载链接已核对，并注明 npm 安装器包版本与 FFmpeg/FFprobe 二进制实际版本的区别。`tools/` 仍保持 Git 忽略。
+
+---
+
+# Turn 193：提交 README 更新
+
+### 我的 Prompt
+
+提交
+
+### codex 回复
+
+已提交：
+
+- 提交：`364aa3e docs: add verified tool download links`
+- 文件：`README.md`
+- 变更：新增 34 行，删除 1 行
+- 分支：`test002`，领先 `origin/test002` 1 个提交
+
+尚未推送到远程仓库。
+
+---
+
+# Turn 194：排查数字人变大并拦截全页面点击的问题
+
+### 我的 Prompt
+
+有潜在bug,数字人有时会很大，然后全页面都没办法点击，而是拖动数字人的鼠标提示。什么原因
+
+### codex 回复
+
+已复现，问题不是数字人模型本身太大，而是 SDK 容器重复创建与残留。
+
+在数字人尚未初始化完成时切换路由，例如从公开首页进入 `/home`，会产生多个重复的 `#yiyuAppElement`。实测其中一个容器尺寸为 `1440 × 1000`，并保持 `position: fixed`、`z-index: 99`、`cursor: move`、`pointer-events: auto`。这个透明容器覆盖整个页面，SDK 又把拖拽事件绑定在整个容器上，因此页面点击被全部拦截。
+
+即使容器变成 `opacity: 0`，只要 `pointer-events: auto` 仍然保留，也会出现“页面看得见但点不了”的情况。
+
+代码侧原因：
+
+1. 每次组件挂载、只要 `runtime.ready` 还是 `false`，都会再次调用 `runtime.app.init()`，没有初始化中的锁。
+2. SDK 每次 `init()` 都会向 `body` 新建一个 `#yiyuAppElement`，项目代码只通过 `getElementById()` 控制其中一个。
+3. 公开首页的嵌入模式会把容器设为 `width: 100%; height: 100%`，样式残留在重复容器上时会铺满页面。
+4. 隐藏逻辑没有清理重复容器；卸载时也只是隐藏，没有真正处理共享 SDK 单例。
+5. SDK 默认让整个透明容器可拖拽并使用 `cursor: move`。
+
+问题通常发生在网络较慢、数字人还没加载完成就切换页面、刷新后快速跳转，或公共首页和登录后页面之间切换时。
+
+---
+
+# Turn 195：修复数字人容器竞态
+
+### 我的 Prompt
+
+按你的修复方向修改
+
+### codex 回复
+
+已按修复方向完成修改：
+
+- 增加全局 `initPromise`，保证 SDK 只初始化一次。
+- 自动清理重复的 `#yiyuAppElement`，只保留最新实例。
+- 浮动数字人放入独立的 340×400 受控容器，并限制在视口范围内。
+- 使用 `position: fixed !important` 覆盖全局 `#app > div` 样式。
+- 关闭 SDK 全容器拖拽，改用右上角 44×44 拖拽手柄，支持鼠标、触摸和方向键移动。
+- 数字人主体恢复普通光标，不再整块显示拖拽提示。
+- 隐藏时同时设置 `display: none`、`pointer-events: none` 和透明度 0。
+- 路由卸载前把 SDK 单例移动到 `body`，避免随 Vue 宿主一起销毁。
+- 全局只注册一次 SDK 回调，字幕完成事件只转发给当前活动实例。
+- 新增 `frontend/tests/avatar-race.mjs` 和 `npm run test:avatar-race` 回归测试。
+
+验证结果：
+
+- `npm run test:avatar-race` 通过。
+- 生产构建通过，仅有原有的 chunk 过大警告。
+- 真实 SDK 下测试 `/` 与 `/home` 往返、拖拽、隐藏和显示均通过。
+
+本地修复对应提交为 `93e69eb`，提交信息为 `debug`。该提交包含组件和依赖锁修改；回归测试文件暂时仍为未跟踪状态。
+
+---
+
+# Turn 196：数字人模型资源返回 401
+
+### 我的 Prompt
+
+```text
+client:789 [vite] connecting...
+client:912 [vite] connected.
+SignAvatarWidget.vue:707 [SignAvatar] SDK 脚本已加载，开始初始化数字人
+SignAvatarWidget.vue:598 [SignAvatar] 数字人界面资源已加载，等待动作服务就绪
+SignAvatarWidget.vue:609 [SignAvatar] 数字人动作服务已就绪
+api.gbqr.net/api/v3/assets/sign/latest/glb/01356.gltf:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+```
+
+### codex 回复
+
+这不是拖拽层修复导致的，而是数字人供应商的模型资源令牌已过期。
+
+直接请求模型地址后返回：
+
+```text
+HTTP 401 Unauthorized
+token expired
+```
+
+日志中的“数字人动作服务已就绪”只表示 SDK 壳层已启动，不代表后续 `.gltf` 模型资源已成功鉴权加载。当前 `VITE_SIGN_AVATAR_ACCOUNT` 能完成 SDK 登录，但它关联的供应商 API Token 已过期；这不是本项目的后端 JWT。
+
+处理方式：
+
+1. 到数字人平台重新生成或续期 Token/账号凭证。
+2. 确认新账号有模型 `01356` 的访问权限和可用席位。
+3. 更新 `frontend/.env.local` 中的 `VITE_SIGN_AVATAR_ACCOUNT`。
+4. 重新启动 Vite，`VITE_*` 环境变量不会通过热更新重新加载。
+5. 清理浏览器站点数据后重新登录测试。
+6. 不要把真实 Token 提交到 Git；`VITE_*` 会打包到浏览器端。
+
+如果续期后仍返回 401，应将响应 `token expired` 和模型资源地址提供给数字人平台服务商排查。
 
 ---
