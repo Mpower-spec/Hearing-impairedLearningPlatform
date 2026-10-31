@@ -97,7 +97,40 @@ mysql --version
 - 后端依赖版本由 `backend/pom.xml` 和 Spring Boot 3.3.5 BOM 管理。
 - 前端依赖由 `frontend/package-lock.json` 锁定；请使用 `npm ci`，不要使用无锁安装。
 - 仓库不包含 `node_modules`、Maven 缓存、LibreOffice、FFmpeg 等本地运行工具。
-- 仓库中的 `tools/` 是本机运行时和调试资料目录，已被 Git 忽略，不属于可克隆依赖。
+- 仓库中的 `tools/` 是本机运行时和调试资料目录，已被 Git 忽略，不属于可克隆依赖；已验证版本的官方下载地址见下文。
+
+### 已验证工具下载地址（Windows 11 x64）
+
+下列资源与上方“已验证基线”的版本一致，链接已于 2026-10-31 核对可访问。`tools/` 不需要上传到 Git，新机器按表从锁定来源下载即可：
+
+| 工具 | 已验证版本 | 下载地址（锁定来源） | 配置说明 |
+| --- | --- | --- | --- |
+| Git | 2.54.0.windows.1 | [Git-2.54.0-64-bit.exe](https://github.com/git-for-windows/git/releases/download/v2.54.0.windows.1/Git-2.54.0-64-bit.exe) | 安装后确保 `git` 在 `PATH` |
+| JDK | Alibaba Dragonwell Standard 21.0.11.0.11+10 | [Windows x64 ZIP](https://github.com/dragonwell-project/dragonwell21/releases/download/dragonwell-standard-21.0.11.0.11%2B10_jdk-21.0.11-ga/Alibaba_Dragonwell_Standard_21.0.11.0.11.10_x64_windows.zip) | 解压目录配置为 `JAVA_HOME` |
+| Maven | 3.9.16 | [apache-maven-3.9.16-bin.zip](https://archive.apache.org/dist/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip) | 将解压目录下的 `bin` 加入 `PATH` |
+| Node.js | 24.12.0 | [node-v24.12.0-x64.msi](https://nodejs.org/dist/v24.12.0/node-v24.12.0-x64.msi) | 同时提供本机验证的 npm 11.6.2 |
+| MySQL | 8.0.46 | [mysql-8.0.46-winx64.zip](https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-8.0.46-winx64.zip) | 初始化并监听 `3306` |
+| LibreOffice | 26.8.1.1 | [LibreOffice_26.8.1.1_Win_x86-64.msi](https://downloadarchive.documentfoundation.org/libreoffice/old/26.8.1.1/win/x86_64/LibreOffice_26.8.1.1_Win_x86-64.msi) | `LIBREOFFICE_PATH` 指向 `program/soffice.exe` |
+| FFmpeg | `N-92722-gf22fcd4483` | [@ffmpeg-installer/win32-x64 4.1.0](https://registry.npmjs.org/@ffmpeg-installer/win32-x64/-/win32-x64-4.1.0.tgz) | 解压后使用包内 `package/ffmpeg.exe` |
+| FFprobe | `2023-02-13-git-2296078397` | [@ffprobe-installer/win32-x64 5.1.0](https://registry.npmjs.org/@ffprobe-installer/win32-x64/-/win32-x64-5.1.0.tgz) | 解压后使用包内 `package/ffprobe.exe` |
+| Chrome / Edge | 最新稳定版 | [Chrome](https://www.google.com/chrome/) / [Edge](https://www.microsoft.com/edge/download) | 麦克风和 Web Speech API 测试使用 |
+
+> FFmpeg/FFprobe 下载地址中的 `4.1.0` 和 `5.1.0` 是 npm 安装器包版本，不是媒体工具自身版本；实际版本以 `ffmpeg -version` 和 `ffprobe -version` 输出为准。
+
+本机解压后的 FFmpeg/FFprobe 二进制校验值：
+
+```text
+ffmpeg.exe   SHA256 C8ABC49E7BE62DDE8E12972AF373959E0076A7B8DC8040EB45978E0608F8781E
+ffprobe.exe  SHA256 F28C4751E7367205267025AAF0FCFC921E34D9B7EDAA46BD9C8ABAF367FC9051
+```
+
+若将 FFmpeg/FFprobe 解压到仓库的 `tools/ffmpeg/`，后端绝对路径示例：
+
+```properties
+LIBREOFFICE_PATH=C:/Program Files/LibreOffice/program/soffice.exe
+FFMPEG_PATH=C:/Hearing-impairedLearningPlatform/tools/ffmpeg/ffmpeg.exe
+FFPROBE_PATH=C:/Hearing-impairedLearningPlatform/tools/ffmpeg/ffprobe.exe
+```
 
 ### 端口与网络
 
